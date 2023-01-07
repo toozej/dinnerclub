@@ -2,6 +2,10 @@
 env:
   - GO111MODULE=on
 
+env_files:
+  gitlab_token: ~/nope
+  gitea_token: ~/nope
+
 before:
   hooks:
     - go mod tidy
@@ -79,7 +83,8 @@ dockers:
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
       - "--label=io.artifacthub.package.license=GPLv3"
-      - "--label=org.opencontainers.image.description=Golang starter template"
+      - "--label=org.opencontainers.image.description=Dinnerclub - Web application to facilitate\
+        \ reviewing and organizing get-togethers at restaurants"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -99,7 +104,8 @@ dockers:
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
       - "--label=io.artifacthub.package.license=GPLv3"
-      - "--label=org.opencontainers.image.description=Golang starter template"
+      - "--label=org.opencontainers.image.description=Dinnerclub - Web application to facilitate\
+        \ reviewing and organizing get-togethers at restaurants"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -120,7 +126,8 @@ dockers:
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
       - "--label=io.artifacthub.package.license=GPLv3"
-      - "--label=org.opencontainers.image.description=Golang starter template"
+      - "--label=org.opencontainers.image.description=Dinnerclub - Web application to facilitate\
+        \ reviewing and organizing get-togethers at restaurants"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -140,7 +147,8 @@ dockers:
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
       - "--label=io.artifacthub.package.license=GPLv3"
-      - "--label=org.opencontainers.image.description=Golang starter template"
+      - "--label=org.opencontainers.image.description=Dinnerclub - Web application to facilitate\
+        \ reviewing and organizing get-togethers at restaurants"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -201,7 +209,7 @@ nfpms:
     id: packages
     homepage: https://github.com/toozej/dinnerclub
     description: |-
-      Golang starter template
+      Dinnerclub - Web application to facilitate reviewing and organizing get-togethers at restaurants
     maintainer: toozej
     license: GPLv3
     vendor: dinnerclub

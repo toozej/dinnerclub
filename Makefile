@@ -33,7 +33,7 @@ else
 	OPENER=open
 endif
 
-.PHONY: all vet test build verify run deploy stop distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs docs docs-generate docs-serve clean help
+.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs docs docs-generate docs-serve clean help
 
 all: vet pre-commit clean test build verify run ## Run default workflow via Docker
 local: local-update-deps local-vendor local-vet pre-commit clean local-test local-cover local-build local-sign local-verify local-run ## Run default workflow using locally installed Golang toolchain
@@ -60,13 +60,13 @@ verify: get-cosign-pub-key ## Verify Docker image with Cosign
 run: ## Run built Docker image
 	docker run --rm --name dinnerclub -v $(CURDIR)/config:/config toozej/dinnerclub:latest
 
-deploy: test build ## Run Docker Compose project with build Docker image
-	docker-compose -f docker-compose.yml down --remove-orphans
-	docker-compose -f docker-compose.yml pull
-	docker-compose -f docker-compose.yml up -d
+up: ## Run Docker Compose project
+	docker compose -f docker-compose.yml down --remove-orphans
+	docker compose -f docker-compose.yml build --pull
+	docker compose -f docker-compose.yml up -d
 
-stop: ## Stop running Docker Compose project
-	docker-compose -f docker-compose.yml down --remove-orphans
+down: ## Stop running Docker Compose project
+	docker compose -f docker-compose.yml down --remove-orphans
 
 distroless-build: ## Build Docker image using distroless as final base
 	docker build -f $(CURDIR)/Dockerfile.distroless -t toozej/dinnerclub:distroless . 
@@ -103,14 +103,14 @@ local-release-test: ## Build assets and test goreleaser config using locally ins
 
 local-release: local-test docker-login ## Release assets using locally installed golang toolchain and goreleaser
 	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/.env; then \
-		source $(CURDIR)/.env && goreleaser release --rm-dist; \
+		export `cat $(CURDIR)/.env | xargs` && git push origin `git describe --tags` && goreleaser release --rm-dist; \
 	else \
-		echo "no cosign private key found at $(CURDIR)/dinnerclub.key. Cannot release."; \
+		echo "Missing required cosign private key or environment variables. Cannot release."; \
 	fi
 
 local-sign: local-test ## Sign locally installed golang toolchain and cosign
 	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/.env; then \
-		source $(CURDIR)/.env && cosign sign-blob --key=$(CURDIR)/dinnerclub.key --output-signature=$(CURDIR)/dinnerclub.sig $(CURDIR)/dinnerclub; \
+		export `cat $(CURDIR)/.env | xargs` && cosign sign-blob --key=$(CURDIR)/dinnerclub.key --output-signature=$(CURDIR)/dinnerclub.sig $(CURDIR)/dinnerclub; \
 	else \
 		echo "no cosign private key found at $(CURDIR)/dinnerclub.key. Cannot release."; \
 	fi
@@ -125,9 +125,10 @@ install: local-build local-verify ## Install compiled binary to local machine
 
 docker-login: ## Login to Docker registries used to publish images to
 	if test -e $(CURDIR)/.env; then \
-		source $(CURDIR)/.env && echo $${DOCKERHUB_TOKEN} | docker login docker.io --username $${DOCKERHUB_USERNAME} --password-stdin; \
-		source $(CURDIR)/.env && echo $${QUAY_TOKEN} | docker login quay.io --username $${QUAY_USERNAME} --password-stdin; \
-		source $(CURDIR)/.env && echo $${GITHUB_GHCR_TOKEN} | docker login ghcr.io --username $${GITHUB_USERNAME} --password-stdin; \
+		export `cat $(CURDIR)/.env | xargs`; \
+		echo $${DOCKERHUB_TOKEN} | docker login docker.io --username $${DOCKERHUB_USERNAME} --password-stdin; \
+		echo $${QUAY_TOKEN} | docker login quay.io --username $${QUAY_USERNAME} --password-stdin; \
+		echo $${GITHUB_GHCR_TOKEN} | docker login ghcr.io --username $${GITHUB_USERNAME} --password-stdin; \
 	else \
 		echo "No container registry credentials found, need to add them to ./.env. See README.md for more info"; \
 	fi

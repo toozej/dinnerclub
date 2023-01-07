@@ -1,19 +1,48 @@
 ---
 version: "3"
 services:
-  dinnerclub:
-    container_name: dinnerclub
+  dinnerclub_app:
+    container_name: dinnerclub_app
+    build:
+      dockerfile: Dockerfile
+      context: .
     image: toozej/dinnerclub:latest
     restart: unless-stopped
+    env_file:
+      - "./.env"
+    volumes:
+      - "./config:/config"
+    labels:
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.dinnerclub.rule=Host(`dinnerclub.test`)"
+      - "traefik.http.routers.dinnerclub.middlewares=http-redirect-https@file,headers@file"
+      - "traefik.http.routers.dinnerclub-secure.entrypoints=https"
+      - "traefik.http.routers.dinnerclub-secure.rule=Host(`dinnerclub.test`)"
+      - "traefik.http.routers.dinnerclub-secure.middlewares=headers@file"
+      - "traefik.http.routers.dinnerclub-secure.tls=true"
+    networks:
+      - traefik
+      - backend
+  dinnerclub_pgsql:
+    image: postgres:14
+    container_name: dinnerclub_pgsql
+    restart: unless-stopped
+    env_file:
+      - "./.env"
+    volumes:
+      - "dinnerclub_pgsql:/var/lib/postgresql/data"
     labels:
       - "traefik.enable=false"
-      # labels below for publishing as web service
-      # - "traefik.docker.network=traefik"
-      # - "traefik.http.routers.dinnerclub.rule=Host(`dinnerclub.test`)"
-      # - "traefik.http.routers.dinnerclub.middlewares=http-redirect-https@file,headers@file"
-      # - "traefik.http.routers.dinnerclub-secure.entrypoints=https"
-      # - "traefik.http.routers.dinnerclub-secure.rule=Host(`dinnerclub.test`)"
-      # - "traefik.http.routers.dinnerclub-secure.middlewares=headers@file"
-      # - "traefik.http.routers.dinnerclub-secure.tls=true"
-    # networks:
-      # - traefik
+    networks:
+      - backend
+volumes:
+  dinnerclub_pgsql:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+networks:
+  traefik:
+    name: traefik
+    external: true
+  backend:
+    driver: bridge
