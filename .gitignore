@@ -12,7 +12,7 @@ cosign.key
 *.dll
 *.so
 *.dylib
-dinnerclub
+/dinnerclub
 
 # Test binary, built with `go test -c`
 *.test
