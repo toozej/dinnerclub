@@ -31,7 +31,7 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate
         }} -X main.builtBy=goreleaser
-    main: ./cmd/golang-starter/
+    main: ./cmd/dinnerclub/
 
 universal_binaries:
   - replace: false
@@ -69,14 +69,14 @@ changelog:
 
 dockers:
   - image_templates:
-      - 'toozej/golang-starter:{{ .Tag }}-amd64'
-      - 'ghcr.io/toozej/golang-starter:{{ .Tag }}-amd64'
-      - 'quay.io/toozej/golang-starter:{{ .Tag }}-amd64'
+      - 'toozej/dinnerclub:{{ .Tag }}-amd64'
+      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-amd64'
+      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-amd64'
     dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/golang-starter/main/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
       - "--label=io.artifacthub.package.license=GPLv3"
       - "--label=org.opencontainers.image.description=Golang starter template"
@@ -89,14 +89,14 @@ dockers:
     extra_files:
       - scripts/goreleaser_entrypoint.sh
   - image_templates:
-      - 'toozej/golang-starter:{{ .Tag }}-arm64'
-      - 'ghcr.io/toozej/golang-starter:{{ .Tag }}-arm64'
-      - 'quay.io/toozej/golang-starter:{{ .Tag }}-arm64'
+      - 'toozej/dinnerclub:{{ .Tag }}-arm64'
+      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-arm64'
+      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-arm64'
     dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/golang-starter/main/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
       - "--label=io.artifacthub.package.license=GPLv3"
       - "--label=org.opencontainers.image.description=Golang starter template"
@@ -110,14 +110,14 @@ dockers:
     extra_files:
       - scripts/goreleaser_entrypoint.sh
   - image_templates:
-      - 'toozej/golang-starter:{{ .Tag }}-distroless-amd64'
-      - 'ghcr.io/toozej/golang-starter:{{ .Tag }}-distroless-amd64'
-      - 'quay.io/toozej/golang-starter:{{ .Tag }}-distroless-amd64'
+      - 'toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
+      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
+      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
     dockerfile: Dockerfile.goreleaser.distroless
     use: buildx
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/golang-starter/main/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
       - "--label=io.artifacthub.package.license=GPLv3"
       - "--label=org.opencontainers.image.description=Golang starter template"
@@ -130,14 +130,14 @@ dockers:
     extra_files:
       - scripts/goreleaser_entrypoint.sh
   - image_templates:
-      - 'toozej/golang-starter:{{ .Tag }}-distroless-arm64'
-      - 'ghcr.io/toozej/golang-starter:{{ .Tag }}-distroless-arm64'
-      - 'quay.io/toozej/golang-starter:{{ .Tag }}-distroless-arm64'
+      - 'toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
+      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
+      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
     dockerfile: Dockerfile.goreleaser.distroless
     use: buildx
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/golang-starter/main/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
       - "--label=io.artifacthub.package.license=GPLv3"
       - "--label=org.opencontainers.image.description=Golang starter template"
@@ -153,31 +153,31 @@ dockers:
 
 docker_manifests:
   # tagged
-  - name_template: 'toozej/golang-starter:{{ .Tag }}'
+  - name_template: 'toozej/dinnerclub:{{ .Tag }}'
     image_templates:
-      - 'toozej/golang-starter:{{ .Tag }}-amd64'
-      - 'toozej/golang-starter:{{ .Tag }}-arm64'
-  - name_template: 'ghcr.io/toozej/golang-starter:{{ .Tag }}'
+      - 'toozej/dinnerclub:{{ .Tag }}-amd64'
+      - 'toozej/dinnerclub:{{ .Tag }}-arm64'
+  - name_template: 'ghcr.io/toozej/dinnerclub:{{ .Tag }}'
     image_templates:
-      - 'ghcr.io/toozej/golang-starter:{{ .Tag }}-amd64'
-      - 'ghcr.io/toozej/golang-starter:{{ .Tag }}-arm64'
-  - name_template: 'quay.io/toozej/golang-starter:{{ .Tag }}'
+      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-amd64'
+      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-arm64'
+  - name_template: 'quay.io/toozej/dinnerclub:{{ .Tag }}'
     image_templates:
-      - 'quay.io/toozej/golang-starter:{{ .Tag }}-amd64'
-      - 'quay.io/toozej/golang-starter:{{ .Tag }}-arm64'
+      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-amd64'
+      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-arm64'
   # latest
-  - name_template: 'toozej/golang-starter:latest'
+  - name_template: 'toozej/dinnerclub:latest'
     image_templates:
-      - 'toozej/golang-starter:{{ .Tag }}-amd64'
-      - 'toozej/golang-starter:{{ .Tag }}-arm64'
-  - name_template: 'ghcr.io/toozej/golang-starter:latest'
+      - 'toozej/dinnerclub:{{ .Tag }}-amd64'
+      - 'toozej/dinnerclub:{{ .Tag }}-arm64'
+  - name_template: 'ghcr.io/toozej/dinnerclub:latest'
     image_templates:
-      - 'ghcr.io/toozej/golang-starter:{{ .Tag }}-amd64'
-      - 'ghcr.io/toozej/golang-starter:{{ .Tag }}-arm64'
-  - name_template: 'quay.io/toozej/golang-starter:latest'
+      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-amd64'
+      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-arm64'
+  - name_template: 'quay.io/toozej/dinnerclub:latest'
     image_templates:
-      - 'quay.io/toozej/golang-starter:{{ .Tag }}-amd64'
-      - 'quay.io/toozej/golang-starter:{{ .Tag }}-arm64'
+      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-amd64'
+      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-arm64'
 
 archives:
   - name_template: >-
@@ -199,33 +199,33 @@ archives:
 nfpms:
   - file_name_template: '{{ .ConventionalFileName }}'
     id: packages
-    homepage: https://github.com/toozej/golang-starter
+    homepage: https://github.com/toozej/dinnerclub
     description: |-
       Golang starter template
     maintainer: toozej
     license: GPLv3
-    vendor: golang-starter
+    vendor: dinnerclub
     bindir: /usr/bin
     section: utils
     contents:
-      - src: ./completions/golang-starter.bash
-        dst: /usr/share/bash-completion/completions/golang-starter
+      - src: ./completions/dinnerclub.bash
+        dst: /usr/share/bash-completion/completions/dinnerclub
         file_info:
           mode: 0644
-      - src: ./completions/golang-starter.fish
-        dst: /usr/share/fish/completions/golang-starter.fish
+      - src: ./completions/dinnerclub.fish
+        dst: /usr/share/fish/completions/dinnerclub.fish
         file_info:
           mode: 0644
-      - src: ./completions/golang-starter.zsh
-        dst: /usr/share/zsh/vendor-completions/_golang-starter
+      - src: ./completions/dinnerclub.zsh
+        dst: /usr/share/zsh/vendor-completions/_dinnerclub
         file_info:
           mode: 0644
-      - src: ./manpages/golang-starter.1.gz
-        dst: /usr/share/man/man1/golang-starter.1.gz
+      - src: ./manpages/dinnerclub.1.gz
+        dst: /usr/share/man/man1/dinnerclub.1.gz
         file_info:
           mode: 0644
       - src: ./LICENSE
-        dst: /usr/share/doc/golang-starter/copyright
+        dst: /usr/share/doc/dinnerclub/copyright
         file_info:
           mode: 0644
     formats:
@@ -250,7 +250,7 @@ signs:
     output: true
     args:
       - 'sign-blob'
-      - '--key=golang-starter.key'
+      - '--key=dinnerclub.key'
       - '--output-signature=${signature}'
       - '${artifact}'
     artifacts: all
@@ -262,7 +262,7 @@ docker_signs:
     output: true
     args:
       - 'sign'
-      - '--key=golang-starter.key'
+      - '--key=dinnerclub.key'
       - '${artifact}'
 
 milestones:
@@ -270,4 +270,4 @@ milestones:
 
 release:
   footer: |
-    **Full Changelog**: https://github.com/toozej/golang-starter/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/toozej/dinnerclub/compare/{{ .PreviousTag }}...{{ .Tag }}

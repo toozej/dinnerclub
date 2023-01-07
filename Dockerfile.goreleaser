@@ -1,6 +1,6 @@
 # runtime image
 FROM scratch
 # Copy our static executable.
-COPY golang-starter /go/bin/golang-starter
+COPY dinnerclub /go/bin/dinnerclub
 # Run the binary.
-ENTRYPOINT ["/go/bin/golang-starter"]
+ENTRYPOINT ["/go/bin/dinnerclub"]

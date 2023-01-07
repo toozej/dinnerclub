@@ -19,7 +19,7 @@ func LoadConfig(configPaths ...string) error {
 	v := viper.New()
 	v.SetConfigName("example")
 	v.SetConfigType("yaml")
-	v.SetEnvPrefix("golang-starter")
+	v.SetEnvPrefix("dinnerclub")
 	v.AutomaticEnv()
 	for _, path := range configPaths {
 		v.AddConfigPath(path)
