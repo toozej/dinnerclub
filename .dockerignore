@@ -16,3 +16,5 @@ Dockerfile*
 docker-compose.yml
 dinnerclub
 dinnerclub.key
+*.env
+.env.sample

@@ -2,13 +2,12 @@ module github.com/toozej/dinnerclub
 
 go 1.19
 
-require github.com/spf13/viper v1.14.0
-
 require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/muesli/mango-cobra v1.2.0
 	github.com/muesli/roff v0.1.0
 	github.com/spf13/cobra v1.6.1
+	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	gorm.io/gorm v1.24.3
 )

@@ -103,15 +103,15 @@ local-release-test: ## Build assets and test goreleaser config using locally ins
 	goreleaser build --rm-dist --snapshot
 
 local-release: local-test docker-login ## Release assets using locally installed golang toolchain and goreleaser
-	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/.env; then \
-		export `cat $(CURDIR)/.env | xargs` && git push origin `git describe --tags` && goreleaser release --rm-dist; \
+	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/cicd.env; then \
+		export `cat $(CURDIR)/cicd.env | xargs` && git push origin `git describe --tags` && goreleaser release --rm-dist; \
 	else \
 		echo "Missing required cosign private key or environment variables. Cannot release."; \
 	fi
 
 local-sign: local-test ## Sign locally installed golang toolchain and cosign
-	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/.env; then \
-		export `cat $(CURDIR)/.env | xargs` && cosign sign-blob --key=$(CURDIR)/dinnerclub.key --output-signature=$(CURDIR)/dinnerclub.sig $(CURDIR)/dinnerclub; \
+	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/cicd.env; then \
+		export `cat $(CURDIR)/cicd.env | xargs` && cosign sign-blob --key=$(CURDIR)/dinnerclub.key --output-signature=$(CURDIR)/dinnerclub.sig $(CURDIR)/dinnerclub; \
 	else \
 		echo "no cosign private key found at $(CURDIR)/dinnerclub.key. Cannot release."; \
 	fi
@@ -125,13 +125,13 @@ install: local-build local-verify ## Install compiled binary to local machine
 	sudo chmod 0755 /usr/local/bin/dinnerclub
 
 docker-login: ## Login to Docker registries used to publish images to
-	if test -e $(CURDIR)/.env; then \
-		export `cat $(CURDIR)/.env | xargs`; \
+	if test -e $(CURDIR)/cicd.env; then \
+		export `cat $(CURDIR)/cicd.env | xargs`; \
 		echo $${DOCKERHUB_TOKEN} | docker login docker.io --username $${DOCKERHUB_USERNAME} --password-stdin; \
 		echo $${QUAY_TOKEN} | docker login quay.io --username $${QUAY_USERNAME} --password-stdin; \
 		echo $${GITHUB_GHCR_TOKEN} | docker login ghcr.io --username $${GITHUB_USERNAME} --password-stdin; \
 	else \
-		echo "No container registry credentials found, need to add them to ./.env. See README.md for more info"; \
+		echo "No container registry credentials found, need to add them to ./cicd.env. See README.md for more info"; \
 	fi
 
 pre-commit: pre-commit-install pre-commit-run ## Install and run pre-commit hooks

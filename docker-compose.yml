@@ -9,9 +9,9 @@ services:
     image: toozej/dinnerclub:latest
     restart: unless-stopped
     env_file:
-      - "./.env"
+      - "./app.env"
     volumes:
-      - "./config:/config"
+      - "./app.env:/app.env"
     labels:
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.dinnerclub.rule=Host(`dinnerclub.test`)"
@@ -28,7 +28,7 @@ services:
     container_name: dinnerclub_pgsql
     restart: unless-stopped
     env_file:
-      - "./.env"
+      - "./db.env"
     volumes:
       - "dinnerclub_pgsql:/var/lib/postgresql/data"
     labels:

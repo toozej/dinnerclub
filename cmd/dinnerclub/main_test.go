@@ -10,26 +10,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO figure out why test router isn't serving /favicon.ico but actual router does
-// func TestFavicon(t *testing.T) {
-// 	contentType := "application/octet-stream"
-//
-// 	fileContents, err := os.ReadFile("../../assets/favicon.ico")
-// 	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
-//
-// 	router := setupRouter()
-//
-// 	w := httptest.NewRecorder()
-// 	req, _ := http.NewRequest(http.MethodGet, "/favicon.ico", nil)
-// 	router.ServeHTTP(w, req)
-//
-// 	body, err := io.ReadAll(w.Body)
-// 	assert.NoError(t, err, "Expected to read http body from response")
-//
-// 	assert.Equal(t, http.StatusOK, w.Code)
-// 	assert.Equal(t, contentType, w.Header().Get("Content-Type"))
-// 	assert.Equal(t, fileContents, body)
-// }
+func TestFavicon(t *testing.T) {
+	contentType := "image/vnd.microsoft.icon"
+
+	fileContents, err := os.ReadFile("../../assets/favicon.ico")
+	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
+
+	router := setupRouter("../../")
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/favicon.ico", nil)
+	router.ServeHTTP(w, req)
+
+	body, err := io.ReadAll(w.Body)
+	assert.NoError(t, err, "Expected to read http body from response")
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, contentType, w.Header().Get("Content-Type"))
+	assert.Equal(t, fileContents, body)
+}
 
 func TestNotFavicon(t *testing.T) {
 	contentType := "application/octet-stream"
@@ -37,7 +36,7 @@ func TestNotFavicon(t *testing.T) {
 	fileContents, err := os.ReadFile("../../assets/favicon.ico")
 	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
 
-	router := setupRouter()
+	router := setupRouter("../../")
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
@@ -52,7 +51,7 @@ func TestNotFavicon(t *testing.T) {
 }
 
 func TestPingRoute(t *testing.T) {
-	router := setupRouter()
+	router := setupRouter("../../")
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/ping", nil)
@@ -63,7 +62,7 @@ func TestPingRoute(t *testing.T) {
 }
 
 func TestNotRoute(t *testing.T) {
-	router := setupRouter()
+	router := setupRouter("../../")
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/notfound", nil)

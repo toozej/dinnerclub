@@ -10,16 +10,18 @@ import (
 var Config appConfig
 
 type appConfig struct {
-	// Example Variable
-	ConfigVar string
+	CityCode         string `mapstructure:"CITY_CODE"`
+	PostgresUser     string `mapstructure:"POSTGRES_USER"`
+	PostgresPassword string `mapstructure:"POSTGRES_PASSWORD"`
+	PostgresDB       string `mapstructure:"POSTGRES_DB"`
+	GinMode          string `mapstructure:"GIN_MODE"`
 }
 
 // LoadConfig loads config from files
 func LoadConfig(configPaths ...string) error {
 	v := viper.New()
-	v.SetConfigName("example")
-	v.SetConfigType("yaml")
-	v.SetEnvPrefix("dinnerclub")
+	v.SetConfigName("app")
+	v.SetConfigType("env")
 	v.AutomaticEnv()
 	for _, path := range configPaths {
 		v.AddConfigPath(path)
