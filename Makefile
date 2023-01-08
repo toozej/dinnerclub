@@ -58,7 +58,8 @@ verify: get-cosign-pub-key ## Verify Docker image with Cosign
 	cosign verify --key $(CURDIR)/dinnerclub.pub toozej/dinnerclub:latest
 
 run: ## Run built Docker image
-	docker run --rm --name dinnerclub -v $(CURDIR)/config:/config toozej/dinnerclub:latest
+	-docker kill dinnerclub
+	docker run --rm -d --name dinnerclub -p 8080:8080 -v $(CURDIR)/config:/config toozej/dinnerclub:latest
 
 up: ## Run Docker Compose project
 	docker compose -f docker-compose.yml down --remove-orphans
