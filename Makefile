@@ -69,6 +69,9 @@ up: ## Run Docker Compose project
 down: ## Stop running Docker Compose project
 	docker compose -f docker-compose.yml down --remove-orphans
 
+logs: ## View running Docker Compose project logs
+	docker compose -f docker-compose.yml logs --tail=100 -f
+
 distroless-build: ## Build Docker image using distroless as final base
 	docker build -f $(CURDIR)/Dockerfile.distroless -t toozej/dinnerclub:distroless . 
 

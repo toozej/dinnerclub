@@ -8,11 +8,27 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 
+	"github.com/toozej/dinnerclub/internal/models"
+
 	"github.com/toozej/dinnerclub/pkg/config"
 	"github.com/toozej/dinnerclub/pkg/database"
 	"github.com/toozej/dinnerclub/pkg/man"
 	"github.com/toozej/dinnerclub/pkg/version"
 )
+
+func migrateSchema() {
+	var schemaModels = []interface{}{
+		models.Entry{},
+		models.User{},
+	}
+
+	for m := range schemaModels {
+		if err := database.DB.AutoMigrate(&schemaModels[m]); err != nil {
+			log.Fatalf("Failed to migrate database schema: %s", err)
+		}
+	}
+	log.Printf("Successfully migrated all database schemas")
+}
 
 func setupRouter(rootPath string) *gin.Engine {
 	r := gin.Default()
@@ -69,7 +85,7 @@ func setupRouter(rootPath string) *gin.Engine {
 func main() {
 	// load application configurations
 	if err := config.LoadConfig("./"); err != nil {
-		panic(fmt.Errorf("invalid application configuration: %s", err))
+		log.Fatalf("invalid application configuration: %s", err)
 	}
 	c := config.Config
 
@@ -86,6 +102,8 @@ func main() {
 			conn_string := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d", c.PostgresHostname, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
 			// connect to Postgres database via Gorm
 			database.ConnectDatabase(conn_string)
+			// auto-migrate database schema
+			migrateSchema()
 
 			// setup Gin router
 			r := setupRouter(".")
