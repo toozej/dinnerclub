@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 
 	"github.com/toozej/dinnerclub/pkg/config"
+	"github.com/toozej/dinnerclub/pkg/database"
 	"github.com/toozej/dinnerclub/pkg/man"
 	"github.com/toozej/dinnerclub/pkg/version"
 )
@@ -70,6 +71,7 @@ func main() {
 	if err := config.LoadConfig("./"); err != nil {
 		panic(fmt.Errorf("invalid application configuration: %s", err))
 	}
+	c := config.Config
 
 	command := &cobra.Command{
 		Use:   "dinnerclub",
@@ -78,12 +80,20 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO remove printing of sensitive env vars
 			// TODO make viper load config from OS environment variables as well as *.env files
-			fmt.Printf("%+v\n", config.Config)
+			fmt.Printf("Loaded config: %+v\n", c)
+
+			// form variable portions of Postgres connection string from config variables
+			conn_string := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d", c.PostgresHostname, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
+			// connect to Postgres database via Gorm
+			database.ConnectDatabase(conn_string)
+
+			// setup Gin router
 			r := setupRouter(".")
+
+			// start up Gin web server
 			err := r.Run(":8080")
 			if err != nil {
-				fmt.Println(err.Error())
-				os.Exit(1)
+				log.Fatal(err.Error())
 			}
 		},
 	}
@@ -94,8 +104,7 @@ func main() {
 	)
 
 	if err := command.Execute(); err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		log.Fatal(err.Error())
 	}
 
 }

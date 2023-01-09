@@ -1,0 +1,25 @@
+package database
+
+import (
+	"testing"
+)
+
+func TestConnectDatabase(t *testing.T) {
+	connString
+	db := ConnectDatabase()
+	db.SetMaxIdleConns(0)
+
+	t.Run("Ping database", func(t *testing.T) {
+		if db.Ping() != nil {
+			t.Errorf("Unable to ping database ... %v", db.Ping())
+		}
+	})
+
+	db.Close()
+
+	t.Run("Check Connections", func(t *testing.T) {
+		if db.Stats().OpenConnections != 0 {
+			t.Errorf("Unable to close database connections ... %v", db.Stats().OpenConnections)
+		}
+	})
+}

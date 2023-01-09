@@ -8,6 +8,8 @@ func TestLoadConfig(t *testing.T) {
 	// Set up test data
 	expectedConfig := appConfig{
 		CityCode:         "test_city_code",
+		PostgresHostname: "test_postgres_hostname",
+		PostgresPort:     12345,
 		PostgresUser:     "test_postgres_user",
 		PostgresPassword: "test_postgres_password",
 		PostgresDB:       "test_postgres_db",
