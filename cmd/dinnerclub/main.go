@@ -2,84 +2,47 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gocondor/core/jwt"
+	"github.com/gocondor/core/sessions"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/toozej/dinnerclub/internal/models"
+	"github.com/toozej/dinnerclub/internal/routers"
 
+	"github.com/toozej/dinnerclub/pkg/authentication"
 	"github.com/toozej/dinnerclub/pkg/config"
 	"github.com/toozej/dinnerclub/pkg/database"
 	"github.com/toozej/dinnerclub/pkg/man"
+	"github.com/toozej/dinnerclub/pkg/session"
 	"github.com/toozej/dinnerclub/pkg/version"
 )
 
-func migrateSchema() {
-	var schemaModels = []interface{}{
-		models.Entry{},
-		models.User{},
+func serveGin(rootPath string, sessionSecret string) {
+	// init Gin router
+	r := routers.NewRouter()
+
+	// init sessions
+	ses := session.InitSession(sessionSecret)
+	r.Use(ses)
+	log.Info("session system setup successfully")
+
+	// setup public and private routes
+	routers.SetupPublicRoutes(rootPath)
+	routers.SetupPrivateRoutes(rootPath)
+	log.Info("routes setup successfully")
+
+	// init auth
+	jwt.New()
+	authentication.New(sessions.Resolve(), jwt.Resolve())
+	log.Info("authentication system setup successfully")
+
+	// start up Gin web server
+	err := r.Run(":8080")
+	if err != nil {
+		log.Fatal(err.Error())
 	}
-
-	for m := range schemaModels {
-		if err := database.DB.AutoMigrate(&schemaModels[m]); err != nil {
-			log.Fatalf("Failed to migrate database schema: %s", err)
-		}
-	}
-	log.Printf("Successfully migrated all database schemas")
-}
-
-func setupRouter(rootPath string) *gin.Engine {
-	r := gin.Default()
-
-	// load HTML templates
-	r.LoadHTMLGlob(rootPath + "/templates/*.html")
-
-	// serve static favicon file from a location relative to main.go directory
-	r.StaticFile("/favicon.ico", rootPath+"/assets/favicon.ico")
-
-	// TODO move setting up routes to own function
-	// TODO change routes funcs from inline to own functions?
-	// primary routes
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", nil)
-	})
-
-	// entries related routes
-	entries := r.Group("/entries")
-	entries.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", nil)
-	})
-
-	// restaurants related routes
-	restaurants := r.Group("/restaurants")
-	restaurants.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "restaurants.html", nil)
-	})
-
-	// profile related routes
-	profile := r.Group("/profile")
-	profile.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "profile.html", nil)
-	})
-	profile.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.html", nil)
-	})
-
-	// health and status routes (which are identical)
-	// TODO include database connectivity health
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, "ok")
-	})
-	r.GET("/status", func(c *gin.Context) {
-		c.JSON(http.StatusOK, "ok")
-	})
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
-
-	return r
 }
 
 func main() {
@@ -89,6 +52,14 @@ func main() {
 	}
 	c := config.Config
 
+	// set log level based off environment variable
+	lvl, err := log.ParseLevel(c.LogLevel)
+	if err != nil {
+		log.Fatal("parsing log level from environment variable failed")
+	}
+	log.SetLevel(lvl)
+	log.Printf("log level set to %v", lvl)
+
 	command := &cobra.Command{
 		Use:   "dinnerclub",
 		Short: "dinnerclub",
@@ -96,23 +67,17 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO remove printing of sensitive env vars
 			// TODO make viper load config from OS environment variables as well as *.env files
-			fmt.Printf("Loaded config: %+v\n", c)
+			log.Debugf("Loaded config: %+v\n", c)
 
 			// form variable portions of Postgres connection string from config variables
 			conn_string := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d", c.PostgresHostname, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
 			// connect to Postgres database via Gorm
 			database.ConnectDatabase(conn_string)
 			// auto-migrate database schema
-			migrateSchema()
+			models.MigrateSchema()
 
-			// setup Gin router
-			r := setupRouter(".")
-
-			// start up Gin web server
-			err := r.Run(":8080")
-			if err != nil {
-				log.Fatal(err.Error())
-			}
+			// setup Gin router and serve
+			serveGin(".", c.SessionSecret)
 		},
 	}
 

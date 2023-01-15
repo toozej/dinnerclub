@@ -10,13 +10,17 @@ import (
 var Config appConfig
 
 type appConfig struct {
-	CityCode         string `mapstructure:"CITY_CODE"`
-	PostgresHostname string `mapstructure:"POSTGRES_HOSTNAME"`
-	PostgresPort     int    `mapstructure:"POSTGRES_PORT"`
-	PostgresUser     string `mapstructure:"POSTGRES_USER"`
-	PostgresPassword string `mapstructure:"POSTGRES_PASSWORD"`
-	PostgresDB       string `mapstructure:"POSTGRES_DB"`
-	GinMode          string `mapstructure:"GIN_MODE"`
+	LogLevel              string `mapstructure:"LOG_LEVEL"`
+	CityCode              string `mapstructure:"CITY_CODE"`
+	PostgresHostname      string `mapstructure:"POSTGRES_HOSTNAME"`
+	PostgresPort          int    `mapstructure:"POSTGRES_PORT"`
+	PostgresUser          string `mapstructure:"POSTGRES_USER"`
+	PostgresPassword      string `mapstructure:"POSTGRES_PASSWORD"`
+	PostgresDB            string `mapstructure:"POSTGRES_DB"`
+	GinMode               string `mapstructure:"GIN_MODE"`
+	JWTSecret             string `mapstructure:"JWT_SECRET"`
+	JWTRefreshTokenSecret string `mapstructure:"JWT_REFRESH_TOKEN_SECRET"`
+	SessionSecret         string `mapstructure:"SESSION_SECRET"`
 }
 
 // LoadConfig loads config from files

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/toozej/dinnerclub/internal/routers"
 )
 
 func TestFavicon(t *testing.T) {
@@ -16,11 +17,13 @@ func TestFavicon(t *testing.T) {
 	fileContents, err := os.ReadFile("../../assets/favicon.ico")
 	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
 
-	router := setupRouter("../../")
+	r := routers.NewRouter()
+	routers.SetupPublicRoutes("../../")
+	routers.SetupPrivateRoutes("../../")
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/favicon.ico", nil)
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 
 	body, err := io.ReadAll(w.Body)
 	assert.NoError(t, err, "Expected to read http body from response")
@@ -36,11 +39,13 @@ func TestNotFavicon(t *testing.T) {
 	fileContents, err := os.ReadFile("../../assets/favicon.ico")
 	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
 
-	router := setupRouter("../../")
+	r := routers.NewRouter()
+	routers.SetupPublicRoutes("../../")
+	routers.SetupPrivateRoutes("../../")
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 
 	body, err := io.ReadAll(w.Body)
 	assert.NoError(t, err, "Expected to read http body from response")
@@ -51,22 +56,26 @@ func TestNotFavicon(t *testing.T) {
 }
 
 func TestPingRoute(t *testing.T) {
-	router := setupRouter("../../")
+	r := routers.NewRouter()
+	routers.SetupPublicRoutes("../../")
+	routers.SetupPrivateRoutes("../../")
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/ping", nil)
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "pong", w.Body.String())
 }
 
 func TestNotRoute(t *testing.T) {
-	router := setupRouter("../../")
+	r := routers.NewRouter()
+	routers.SetupPublicRoutes("../../")
+	routers.SetupPrivateRoutes("../../")
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/notfound", nil)
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	assert.Contains(t, w.Body.String(), "404")
