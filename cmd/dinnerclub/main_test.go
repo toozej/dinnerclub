@@ -50,7 +50,7 @@ func TestNotFavicon(t *testing.T) {
 	body, err := io.ReadAll(w.Body)
 	assert.NoError(t, err, "Expected to read http body from response")
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusMovedPermanently, w.Code)
 	assert.NotEqual(t, contentType, w.Header().Get("Content-Type"))
 	assert.NotEqual(t, fileContents, body)
 }

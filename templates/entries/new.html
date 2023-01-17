@@ -1,0 +1,65 @@
+<!--new.html-->
+
+{{ define "entries/new.html" }}
+{{ template "base/header.html" .}}
+
+<h2>Add an Entry</h2>
+<form action="/entries/new" method="POST">
+    <label>Restaurant Name</label>
+    <input type="text" name="name" id="name">
+    <label>Location</label>
+    <p><select>
+        <option selected="selected" id="location" value="1">N</option>
+        <option value="2">NE</option>
+        <option value="3">NW</option>
+        <option value="4">SW</option>
+        <option value="5">SE</option>
+        <option value="6">S</option>
+    </select></p>
+    <label>Cuisine</label>
+    <input type="text" name="cuisine" id="cuisine">
+    <p><label>
+        <input type="checkbox" id="closed" value="closed">
+        Restaurant is permanently closed
+    </label></p>
+    <label>Meal Service</label>
+    <p><select>
+    <option selected="selected" id="mealservice" value="breakfast">Breakfast</option>
+    <option value="brunch">Brunch</option>
+    <option value="lunch">Lunch</option>
+    <option value="happy_hour">Happy Hour</option>
+    <option value="dinner">Dinner</option>
+    <option value="drinks">Drinks</option>
+    <option value="late_night">Late Night</option>
+    </select></p>
+    <label>Food Rating</label>
+    <p><select>
+    <option selected="selected" id="foodrating" value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    </select></p>
+    <label>Ambience Rating</label>
+    <p><select>
+    <option selected="selected" id="ambiencerating" value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    </select></p>
+    <label>Value Rating</label>
+    <p><select>
+    <option selected="selected" id="valuerating" value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    </select></p>
+    <label>Comments</label>
+    <input type="text" name="comments" id="comments">
+    <p><button type="submit">Submit</button></p>
+</form>
+
+{{ template "base/footer.html" .}}
+{{ end }}

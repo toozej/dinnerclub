@@ -1,0 +1,20 @@
+package models
+
+import (
+	"github.com/toozej/dinnerclub/pkg/helpers"
+	"testing"
+)
+
+// This tests that a fresh database returns no rows (but no error) when
+// fetching Entries.
+func TestEntryEmpty(t *testing.T) {
+	t.Parallel()
+	db := helpers.freshDb(t)
+	entries := []Entry{}
+	if err := db.Find(&entries).Error; err != nil {
+		t.Fatalf("Error querying entries from fresh db: %s", err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("Expected 0 entries, got %d", len(entrys))
+	}
+}

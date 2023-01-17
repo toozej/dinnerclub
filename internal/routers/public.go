@@ -11,7 +11,7 @@ func SetupPublicRoutes(rootPath string) {
 	r := ResolveRouter()
 
 	// load HTML templates
-	r.LoadHTMLGlob(rootPath + "/templates/*.html")
+	r.LoadHTMLGlob(rootPath + "/templates/*/*.html")
 
 	// serve static favicon file from a location relative to main.go directory
 	r.StaticFile("/favicon.ico", rootPath+"/assets/favicon.ico")
@@ -20,24 +20,30 @@ func SetupPublicRoutes(rootPath string) {
 	// TODO change routes funcs from inline to own functions
 	// TODO change routes funcs to handle JSON, HTML and XML
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", nil)
+		c.Redirect(http.StatusMovedPermanently, "/entries/")
 	})
 
 	// entries related routes
 	entries := r.Group("/entries")
 	entries.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", nil)
+		c.HTML(http.StatusOK, "entries/index.html", nil)
 	})
 
 	// restaurants related routes
 	restaurants := r.Group("/restaurants")
 	restaurants.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "restaurants.html", nil)
+		c.HTML(http.StatusOK, "restaurants/index.html", nil)
 	})
 
 	// user authentication related routes
 	preAuth := r.Group("/auth")
+	preAuth.GET("/register", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "auth/register.html", nil)
+	})
 	preAuth.POST("/register", controllers.Register)
+	preAuth.GET("/login", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "auth/login.html", nil)
+	})
 	preAuth.POST("/login", controllers.Login)
 	preAuth.POST("/logout", controllers.Logout)
 

@@ -1,6 +1,8 @@
 <!--restaurants.html-->
+{{ define "restaurants/index.html" }}
+{{ template "base/header.html" .}}
 
-{{ template "header.html" .}}
+# TODO list all restaurants here
 
   <!--Loop over the payload variable, which is the list of restaurants-->
   {{range .payload }}
@@ -13,4 +15,5 @@
     <p>{{.Content}}</p>
   {{end}}
 
-{{ template "footer.html" .}}
+{{ template "base/footer.html" .}}
+{{ end }}

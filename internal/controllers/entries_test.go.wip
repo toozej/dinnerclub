@@ -1,0 +1,85 @@
+package controllers
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/toozej/dinnerclub/pkg/helpers"
+	"gorm.io/gorm"
+	"testing"
+)
+
+func TestEntryNewGet(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name string
+	}{
+		{"basic"},
+	}
+
+	for i := range tcs {
+		tc := &tcs[i]
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			db := helpers.FreshDb(t)
+			w := getHasStatus(t, db, "/entries/new", http.StatusOK)
+			body := w.Body.String()
+			fragments := []string{
+				"<h2>Add an Entry</h2>",
+				`<form action="/entries/new" method="POST">`,
+				`<input type="text" name="name" id="name">`,
+				`<p><select>`,
+				`<option selected="selected" id="location" value="1">Location</option>`,
+				`<option value="2">N</option>`,
+				`<option value="3">NE</option>`,
+				`<option value="4">NW</option>`,
+				`<option value="5">SW</option>`,
+				`<option value="6">SE</option>`,
+				`<option value="7">S</option>`,
+				`</select></p>`,
+				`<input type="text" name="cuisine" id="cuisine">`,
+				`<input type="text" name="closed" id="closed">`,
+				`<p><label>`,
+				`<input type="checkbox" id="closed" value="closed">`,
+				`Restaurant is permanently closed`,
+				`</label></p>`,
+				`<p><select>`,
+				`<option selected="selected" id="mealservice" value="1">Meal Service</option>`,
+				`<option value="2">Breakfast</option>`,
+				`<option value="3">Brunch</option>`,
+				`<option value="4">Lunch</option>`,
+				`<option value="5">Happy Hour</option>`,
+				`<option value="6">Dinner</option>`,
+				`<option value="7">Drinks</option>`,
+				`<option value="8">Late Night</option>`,
+				`</select></p>`,
+				`<p><select>`,
+				`<option selected="selected" id="foodrating" value="1">Food Rating</option>`,
+				`<option value="2">1</option>`,
+				`<option value="3">2</option>`,
+				`<option value="4">3</option>`,
+				`<option value="5">4</option>`,
+				`<option value="6">5</option>`,
+				`</select></p>`,
+				`<p><select>`,
+				`<option selected="selected" id="ambiencerating" value="1">Ambience Rating</option>`,
+				`<option value="2">1</option>`,
+				`<option value="3">2</option>`,
+				`<option value="4">3</option>`,
+				`<option value="5">4</option>`,
+				`<option value="6">5</option>`,
+				`</select></p>`,
+				`<p><select>`,
+				`<option selected="selected" id="valuerating" value="1">Value Rating</option>`,
+				`<option value="2">1</option>`,
+				`<option value="3">2</option>`,
+				`<option value="4">3</option>`,
+				`<option value="5">4</option>`,
+				`<option value="6">5</option>`,
+				`</select></p>`,
+				`<input type="text" name="comments" id="comments">`,
+				`<button type="submit">`,
+                `</form>`
+			}
+			bodyHasFragments(t, body, fragments)
+		})
+	}
+}

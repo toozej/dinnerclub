@@ -1,0 +1,19 @@
+<!--entry.html-->
+{{ define "entries/entry.html" }}
+{{ template "base/header.html" .}}
+
+<!--TODO display single entry here-->
+
+  <!--Loop over the payload variable, which is the list of entries-->
+  {{range .payload }}
+    <!--Create the link for the entry based on its ID-->
+    <a href="/entry/view/{{.ID}}">
+      <!--Display the title of the entry -->
+      <h2>{{.Title}}</h2>
+    </a>
+    <!--Display the content of the entry-->
+    <p>{{.Content}}</p>
+  {{end}}
+
+{{ template "base/footer.html" .}}
+{{ end }}

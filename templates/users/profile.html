@@ -1,0 +1,10 @@
+<!--profile.html-->
+{{ define "users/profile.html" }}
+{{ template "base/header.html" .}}
+
+<h1>{{.payload.Title}}</h1>
+<h2>PROFILE PAGE GOES HERE</h2>
+<p>{{.payload.Content}}</p>
+
+{{ template "base/footer.html" .}}
+{{ end }}

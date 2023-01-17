@@ -1,0 +1,36 @@
+{{ define "base/header.html" }}
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Dinner Club</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+
+    <!--Use simplecss to make the application look nice-->
+	<!--From: https://github.com/kevquirk/simple.css/wiki/Getting-Started-With-Simple.css-->
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+
+	<!--Use GoatCounter for application analytics-->
+	<!--TODO figure out how to use CITY_CODE env var in hostname as lower-case-->
+	<script data-goatcounter="https://stats.dinner.club/count" async src="//stats.dinner.club/count.js"></script>
+  </head>
+
+  <body class="container">
+    <header>
+        {{ template "base/menu.html" . }}
+        <!--TODO figure out how to inject citycode-->
+        <h1>{{ .citycode }} Dinner Club</h1>
+    </header>
+
+    <!--TODO add flashing messages for stuff like new entry successfully created, logged out successfully, etc.-->
+    <!--https://universalglue.dev/posts/gin-sessions/-->
+    {{ if .messages }}
+    {{ range .messages }}
+    <div class="flash-message" role="alert">
+        {{ . }}
+    </div>
+    {{ end }}
+    {{ end }}
+
+{{ end }}
