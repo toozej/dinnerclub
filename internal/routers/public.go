@@ -25,14 +25,18 @@ func SetupPublicRoutes(rootPath string) {
 
 	// entries related routes
 	entries := r.Group("/entries")
-	entries.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "entries/index.html", nil)
-	})
+	entries.GET("/", controllers.FindEntries)
+	entries.GET("/:id", controllers.FindEntry)
 
 	// restaurants related routes
 	restaurants := r.Group("/restaurants")
+	// TODO create controllers/restaurants.go with similar FindRestaurants, FindRestaurant as Entries/Entry
+	// TODO use restaurants controllers here
 	restaurants.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "restaurants/index.html", nil)
+	})
+	restaurants.GET("/:name", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "restaurants/restaurant.html", nil)
 	})
 
 	// user authentication related routes

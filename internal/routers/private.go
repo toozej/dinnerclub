@@ -26,6 +26,6 @@ func SetupPrivateRoutes(rootPath string) {
 		c.HTML(http.StatusOK, "entries/new.html", nil)
 	})
 	postAuth.POST("/entries/new", controllers.CreateEntry)
-	postAuth.PATCH("/entries/update", controllers.UpdateEntry)
-	postAuth.DELETE("/entries/delete", controllers.DeleteEntry)
+	postAuth.PATCH("/entries/:id", controllers.UpdateEntry)
+	postAuth.DELETE("/entries/:id", controllers.DeleteEntry)
 }

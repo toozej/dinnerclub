@@ -2,18 +2,24 @@
 {{ define "entries/entry.html" }}
 {{ template "base/header.html" .}}
 
-<!--TODO display single entry here-->
-
-  <!--Loop over the payload variable, which is the list of entries-->
-  {{range .payload }}
-    <!--Create the link for the entry based on its ID-->
-    <a href="/entry/view/{{.ID}}">
-      <!--Display the title of the entry -->
-      <h2>{{.Title}}</h2>
-    </a>
+<section>
+    <!--Display the title of the entry which is also a link based on its ID-->
+    <h2><a href="/entries/{{ .entry.ID }}">{{ .entry.Name }}</a></h2>
     <!--Display the content of the entry-->
-    <p>{{.Content}}</p>
-  {{end}}
+    <p>Submitter: {{ .entry.Submitter }}</p>
+    <p>Date: {{ .entry.CreatedAt.Format "Jan 02 2006" }}</p>
+    <p>Visited: {{ .entry.Visited }}</p>
+    <p>Location: {{ .entry.Location }}</p>
+    <p>Cuisine: {{ .entry.Cuisine }}</p>
+    <p>(Optional fields below)</p>
+    <p>Closed: {{ .entry.Closed }}</p>
+    <p>Meal Service: {{ .entry.MealService }}</p>
+    <p>Ordered: {{ .entry.Ordered }}</p>
+    <p>Food Rating: {{ .entry.FoodRating }}</p>
+    <p>Ambience Rating: {{ .entry.AmbienceRating }}</p>
+    <p>Value Rating: {{ .entry.ValueRating }}</p>
+    <p>Comments: {{ .entry.Comments }}</p>
+</section>
 
 {{ template "base/footer.html" .}}
 {{ end }}

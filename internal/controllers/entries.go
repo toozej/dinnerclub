@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/toozej/dinnerclub/internal/models"
 	"github.com/toozej/dinnerclub/pkg/database"
 )
@@ -14,7 +16,7 @@ func FindEntries(c *gin.Context) {
 	var entries []models.Entry
 	database.DB.Find(&entries)
 
-	c.JSON(http.StatusOK, gin.H{"data": entries})
+	c.HTML(http.StatusOK, "entries/index.html", gin.H{"entries": entries})
 }
 
 // GET /entries/:id
@@ -27,37 +29,58 @@ func FindEntry(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": entry})
+	c.HTML(http.StatusOK, "entries/entry.html", gin.H{"entry": entry})
 }
 
 // POST /entries
 // Create new entry
 func CreateEntry(c *gin.Context) {
 	// Validate input
-	var input models.Entry
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	entry := &models.Entry{}
+	// var input models.Entry
+	// if err := c.ShouldBind(&input); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 	return
+	// }
+
+	// // Create entry
+	// entry := models.Entry{
+	// 	Submitter:      input.Submitter,
+	// 	Name:           input.Name,
+	// 	Location:       input.Location,
+	// 	Cuisine:        input.Cuisine,
+	// 	Visited:        input.Visited,
+	// 	Closed:         input.Closed,
+	// 	MealService:    input.MealService,
+	// 	Ordered:        input.Ordered,
+	// 	FoodRating:     input.FoodRating,
+	// 	AmbienceRating: input.AmbienceRating,
+	// 	ValueRating:    input.ValueRating,
+	// 	Comments:       input.Comments,
+	// }
+
+	if err := c.ShouldBind(entry); err != nil {
+		verrs := err.(validator.ValidationErrors)
+		messages := make([]string, len(verrs))
+		for i, verr := range verrs {
+			messages[i] = fmt.Sprintf(
+				"%s is required, but was empty.",
+				verr.Field())
+		}
+		c.HTML(http.StatusBadRequest, "entries/new.html",
+			gin.H{"errors": messages})
 		return
 	}
 
-	// Create entry
-	entry := models.Entry{
-		Submitter:      input.Submitter,
-		Name:           input.Name,
-		Location:       input.Location,
-		Cuisine:        input.Cuisine,
-		Visited:        input.Visited,
-		Closed:         input.Closed,
-		MealService:    input.MealService,
-		Ordered:        input.Ordered,
-		FoodRating:     input.FoodRating,
-		AmbienceRating: input.AmbienceRating,
-		ValueRating:    input.ValueRating,
-		Comments:       input.Comments,
+	if err := database.DB.Create(&entry).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
-	database.DB.Create(&entry)
 
-	c.JSON(http.StatusOK, gin.H{"data": entry})
+	// TODO add flash for successful creation
+
+	redirectPath := fmt.Sprintf("/entries/%d", entry.ID)
+	c.Redirect(http.StatusFound, redirectPath)
 }
 
 // PATCH /entries/:id
@@ -72,14 +95,19 @@ func UpdateEntry(c *gin.Context) {
 
 	// Validate input
 	var input models.Entry
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	database.DB.Model(&entry).Updates(input)
+	if err := database.DB.Model(&entry).Updates(input).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"data": entry})
+	// TODO add flash for successful update
+	redirectPath := fmt.Sprintf("/entry/%d", entry.ID)
+	c.Redirect(http.StatusFound, redirectPath)
 }
 
 // DELETE /entries/:id
@@ -91,7 +119,11 @@ func DeleteEntry(c *gin.Context) {
 		return
 	}
 
-	database.DB.Delete(&entry)
+	if err := database.DB.Delete(&entry).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"data": true})
+	// TODO add flash for successful deletion
+	c.Redirect(http.StatusOK, "/entries")
 }
