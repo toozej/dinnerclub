@@ -7,9 +7,22 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gocondor/core/jwt"
+	"github.com/gocondor/core/sessions"
 	"github.com/stretchr/testify/assert"
 	"github.com/toozej/dinnerclub/internal/routers"
+	"github.com/toozej/dinnerclub/pkg/authentication"
+	"github.com/toozej/dinnerclub/pkg/session"
 )
+
+func sessionSetup() gin.HandlerFunc {
+	return session.InitSession("testing123")
+}
+func authSetup() {
+	jwt.New()
+	authentication.New(sessions.Resolve(), jwt.Resolve())
+}
 
 func TestFavicon(t *testing.T) {
 	contentType := "image/vnd.microsoft.icon"
@@ -18,8 +31,10 @@ func TestFavicon(t *testing.T) {
 	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
 
 	r := routers.NewRouter()
+	r.Use(sessionSetup())
 	routers.SetupPublicRoutes("../../")
 	routers.SetupPrivateRoutes("../../")
+	authSetup()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/favicon.ico", nil)
@@ -40,8 +55,10 @@ func TestNotFavicon(t *testing.T) {
 	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
 
 	r := routers.NewRouter()
+	r.Use(sessionSetup())
 	routers.SetupPublicRoutes("../../")
 	routers.SetupPrivateRoutes("../../")
+	authSetup()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
@@ -57,8 +74,10 @@ func TestNotFavicon(t *testing.T) {
 
 func TestPingRoute(t *testing.T) {
 	r := routers.NewRouter()
+	r.Use(sessionSetup())
 	routers.SetupPublicRoutes("../../")
 	routers.SetupPrivateRoutes("../../")
+	authSetup()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/ping", nil)
@@ -70,8 +89,10 @@ func TestPingRoute(t *testing.T) {
 
 func TestNotRoute(t *testing.T) {
 	r := routers.NewRouter()
+	r.Use(sessionSetup())
 	routers.SetupPublicRoutes("../../")
 	routers.SetupPrivateRoutes("../../")
+	authSetup()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/notfound", nil)
