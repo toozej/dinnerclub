@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gocondor/core/jwt"
 	"github.com/toozej/dinnerclub/internal/models"
@@ -61,7 +63,7 @@ func Login(c *gin.Context) {
 	}
 
 	// generate the jwt token
-	token, err := JWT.CreateToken(user.ID)
+	_, err = JWT.CreateToken(user.ID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"message": "something went wrong creating JWT token",
@@ -69,7 +71,7 @@ func Login(c *gin.Context) {
 	}
 
 	// generate the token
-	refreshToken, err := JWT.CreateRefreshToken(user.ID)
+	_, err = JWT.CreateRefreshToken(user.ID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"message": "something went wrong refreshing JWT token",
@@ -84,13 +86,23 @@ func Login(c *gin.Context) {
 		})
 	}
 
+	// set user as logged in via Gin context
+	c.Set("is_logged_in", true)
+
+	log.Debugf("User %s successfully logged in", user.Username)
+
+	// TODO add flash for successful login
+
 	// render response
-	c.JSON(http.StatusOK, gin.H{
-		"data": map[string]string{
-			"token":        token,
-			"refreshToken": refreshToken,
-		},
-	})
+	// TODO respond with JSON if selected, or HTML if selected
+	// c.JSON(http.StatusOK, gin.H{
+	// 	"data": map[string]string{
+	// 		"token":        token,
+	// 		"refreshToken": refreshToken,
+	// 	},
+	// })
+	redirectPath := "/profile/"
+	c.Redirect(http.StatusFound, redirectPath)
 }
 
 func Logout(c *gin.Context) {
@@ -103,9 +115,15 @@ func Logout(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "logged out successfuly",
-	})
+	// TODO add flash for successful login
+
+	// render response
+	// TODO respond with JSON if selected, or HTML if selected
+	// c.JSON(http.StatusOK, gin.H{
+	// 	"message": "logged out successfully",
+	// })
+	redirectPath := "/entries/"
+	c.Redirect(http.StatusFound, redirectPath)
 }
 
 func Register(c *gin.Context) {
@@ -147,9 +165,15 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "signup successfully",
-	})
+	// TODO add flash for successful registration
+
+	// render response
+	// TODO respond with JSON if selected, or HTML if selected
+	// c.JSON(http.StatusOK, gin.H{
+	// 	"message": "signup successful",
+	// })
+	redirectPath := "/auth/login"
+	c.Redirect(http.StatusFound, redirectPath)
 }
 
 // hashPassword hashs passwords
@@ -160,4 +184,39 @@ func hashPassword(password string) (string, error) {
 	}
 
 	return string(hashedPassword), nil
+}
+
+func SetUserStatus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		Auth := authentication.Resolve()
+		if authed, err := Auth.UserID(c); err == nil && authed != 0 {
+			c.Set("is_logged_in", true)
+		} else {
+			c.Set("is_logged_in", false)
+		}
+	}
+}
+
+// This function ensures that a request will be aborted with an error
+// if the user is not logged in
+func EnsureLoggedIn() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		loggedInInterface, _ := c.Get("is_logged_in")
+		loggedIn := loggedInInterface.(bool)
+		if !loggedIn {
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+	}
+}
+
+// This function ensures that a request will be aborted with an error
+// if the user is already logged in
+func EnsureNotLoggedIn() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		loggedInInterface, _ := c.Get("is_logged_in")
+		loggedIn := loggedInInterface.(bool)
+		if loggedIn {
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+	}
 }

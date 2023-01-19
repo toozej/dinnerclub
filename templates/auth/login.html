@@ -3,8 +3,16 @@
 {{ define "auth/login.html" }}
 {{ template "base/header.html" .}}
 
-# TODO make login form here
-# TODO make login controller redirect to /entries/ once logged in successfully
+{{ template "base/errors.html" . }}
+
+<h2>Login</h2>
+<form action="/auth/login" method="POST">
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username" required>
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" minlength="10" required autocomplete="current-password">
+    <p><button type="submit">Submit</button></p>
+</form>
 
 {{ template "base/footer.html" .}}
 {{ end }}

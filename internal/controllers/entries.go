@@ -14,9 +14,10 @@ import (
 // Find all entries
 func FindEntries(c *gin.Context) {
 	var entries []models.Entry
+	// TODO sort entries from newest to oldest
 	database.DB.Find(&entries)
 
-	c.HTML(http.StatusOK, "entries/index.html", gin.H{"entries": entries})
+	c.HTML(http.StatusOK, "entries/index.html", gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool)})
 }
 
 // GET /entries/:id
@@ -29,7 +30,7 @@ func FindEntry(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "entries/entry.html", gin.H{"entry": entry})
+	c.HTML(http.StatusOK, "entries/entry.html", gin.H{"entry": entry, "is_logged_in": c.MustGet("is_logged_in").(bool)})
 }
 
 // POST /entries
@@ -37,28 +38,6 @@ func FindEntry(c *gin.Context) {
 func CreateEntry(c *gin.Context) {
 	// Validate input
 	entry := &models.Entry{}
-	// var input models.Entry
-	// if err := c.ShouldBind(&input); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
-	// // Create entry
-	// entry := models.Entry{
-	// 	Submitter:      input.Submitter,
-	// 	Name:           input.Name,
-	// 	Location:       input.Location,
-	// 	Cuisine:        input.Cuisine,
-	// 	Visited:        input.Visited,
-	// 	Closed:         input.Closed,
-	// 	MealService:    input.MealService,
-	// 	Ordered:        input.Ordered,
-	// 	FoodRating:     input.FoodRating,
-	// 	AmbienceRating: input.AmbienceRating,
-	// 	ValueRating:    input.ValueRating,
-	// 	Comments:       input.Comments,
-	// }
-
 	if err := c.ShouldBind(entry); err != nil {
 		verrs := err.(validator.ValidationErrors)
 		messages := make([]string, len(verrs))
@@ -68,9 +47,12 @@ func CreateEntry(c *gin.Context) {
 				verr.Field())
 		}
 		c.HTML(http.StatusBadRequest, "entries/new.html",
-			gin.H{"errors": messages})
+			gin.H{"errors": messages, "is_logged_in": c.MustGet("is_logged_in").(bool)})
 		return
 	}
+
+	// TODO set entry.Submitter field to the username of the person submitting the form
+	entry.Submitter = GetCurrentUsername(c)
 
 	if err := database.DB.Create(&entry).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -86,6 +68,7 @@ func CreateEntry(c *gin.Context) {
 // PATCH /entries/:id
 // Update an entry
 func UpdateEntry(c *gin.Context) {
+	// TODO use same validation and ShouldBind() from CreateEntry()
 	// Get model if exist
 	var entry models.Entry
 	if err := database.DB.Where("id = ?", c.Param("id")).First(&entry).Error; err != nil {
@@ -113,6 +96,7 @@ func UpdateEntry(c *gin.Context) {
 // DELETE /entries/:id
 // Delete an entry
 func DeleteEntry(c *gin.Context) {
+	// TODO use same validation and ShouldBind() from CreateEntry()
 	var entry models.Entry
 	if err := database.DB.Where("id = ?", c.Param("id")).First(&entry).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})

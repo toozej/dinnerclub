@@ -7,21 +7,17 @@ import (
 	"github.com/toozej/dinnerclub/internal/controllers"
 )
 
+// private routes are ones which the user must be authenticated to use
 func SetupPrivateRoutes(rootPath string) {
 	r := ResolveRouter()
 
 	profile := r.Group("/profile")
-	// TODO figure out how to ensure private routes are authenticated with gocondor libs
-	// profile.Use(authentication.Resolve())
-	profile.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "users/profile.html", nil)
-	})
-	// TODO write GetProfile controller
-	// profile.GET("/", controllers.GetProfile)
+	profile.Use(controllers.EnsureLoggedIn())
+	profile.GET("/", controllers.GetProfile)
 
 	postAuth := r.Group("/")
-	// TODO figure out how to ensure private routes are authenticated with gocondor libs
-	// postAuth.Use(authentication.Resolve())
+	postAuth.Use(controllers.EnsureLoggedIn())
+	postAuth.POST("/auth/logout", controllers.Logout)
 	postAuth.GET("/entries/new", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "entries/new.html", nil)
 	})

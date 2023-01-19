@@ -2,9 +2,25 @@
 {{ define "auth/register.html" }}
 {{ template "base/header.html" .}}
 
-<h1>{{.payload.Title}}</h1>
-<h2>REGISTRATION PAGE GOES HERE</h2>
-<p>{{.payload.Content}}</p>
+{{ template "base/errors.html" . }}
+# TODO make login controller redirect to /entries/ once logged in successfully
+
+<h2>Register</h2>
+<form action="/auth/register" method="POST">
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username" required>
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" minlength="10" required autocomplete="new-password">
+    <label for="firstname">First Name</label>
+    <input type="text" name="firstname" id="firstname">
+    <label for="lastname">Last Name</label>
+    <input type="text" name="lastname" id="lastname">
+    <label for="email">Email Address</label>
+    <input type="email" name="email" id="email">
+    <label for="referralcode">Referral Code</label>
+    <input type="text" name="referralcode" id="referralcode" required>
+    <p><button type="submit">Submit</button></p>
+</form>
 
 {{ template "base/footer.html" .}}
 {{ end }}

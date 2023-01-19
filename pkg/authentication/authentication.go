@@ -63,6 +63,9 @@ func (a *Auth) Logout(c *gin.Context) error {
 	return nil
 }
 
+// TODO figure out what is wrong with this function, and maybe use it in place of Auth.UserID()
+// in authentication controller SetUserStatus()
+
 // Check checks if a user is logged in
 func (a *Auth) Check(c *gin.Context) (bool, error) {
 	// if session doesn't have user id return false

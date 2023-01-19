@@ -9,6 +9,7 @@ import (
 
 func SetupPublicRoutes(rootPath string) {
 	r := ResolveRouter()
+	r.Use(controllers.SetUserStatus())
 
 	// load HTML templates
 	r.LoadHTMLGlob(rootPath + "/templates/*/*.html")
@@ -17,7 +18,6 @@ func SetupPublicRoutes(rootPath string) {
 	r.StaticFile("/favicon.ico", rootPath+"/assets/favicon.ico")
 
 	// primary routes
-	// TODO change routes funcs from inline to own functions
 	// TODO change routes funcs to handle JSON, HTML and XML
 	r.GET("/", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/entries/")
@@ -33,14 +33,15 @@ func SetupPublicRoutes(rootPath string) {
 	// TODO create controllers/restaurants.go with similar FindRestaurants, FindRestaurant as Entries/Entry
 	// TODO use restaurants controllers here
 	restaurants.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "restaurants/index.html", nil)
+		c.HTML(http.StatusOK, "restaurants/index.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool)})
 	})
 	restaurants.GET("/:name", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "restaurants/restaurant.html", nil)
+		c.HTML(http.StatusOK, "restaurants/restaurant.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool)})
 	})
 
-	// user authentication related routes
+	// user pre-authenticated authentication related routes
 	preAuth := r.Group("/auth")
+	preAuth.Use(controllers.EnsureNotLoggedIn())
 	preAuth.GET("/register", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "auth/register.html", nil)
 	})
@@ -49,7 +50,6 @@ func SetupPublicRoutes(rootPath string) {
 		c.HTML(http.StatusOK, "auth/login.html", nil)
 	})
 	preAuth.POST("/login", controllers.Login)
-	preAuth.POST("/logout", controllers.Logout)
 
 	// health and status routes (which are identical)
 	// TODO include database connectivity health
