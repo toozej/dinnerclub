@@ -17,7 +17,8 @@ func FindEntries(c *gin.Context) {
 	// TODO sort entries from newest to oldest
 	database.DB.Find(&entries)
 
-	c.HTML(http.StatusOK, "entries/index.html", gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool)})
+	c.HTML(http.StatusOK, "entries/index.html",
+		gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
 }
 
 // GET /entries/:id
@@ -30,7 +31,8 @@ func FindEntry(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "entries/entry.html", gin.H{"entry": entry, "is_logged_in": c.MustGet("is_logged_in").(bool)})
+	c.HTML(http.StatusOK, "entries/entry.html",
+		gin.H{"entry": entry, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
 }
 
 // POST /entries
@@ -47,7 +49,7 @@ func CreateEntry(c *gin.Context) {
 				verr.Field())
 		}
 		c.HTML(http.StatusBadRequest, "entries/new.html",
-			gin.H{"errors": messages, "is_logged_in": c.MustGet("is_logged_in").(bool)})
+			gin.H{"errors": messages, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
 		return
 	}
 

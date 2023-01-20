@@ -32,6 +32,7 @@ func TestFavicon(t *testing.T) {
 
 	r := routers.NewRouter()
 	r.Use(sessionSetup())
+	routers.SetupRouterDefaults("TST")
 	routers.SetupPublicRoutes("../../")
 	routers.SetupPrivateRoutes("../../")
 	authSetup()
@@ -56,6 +57,7 @@ func TestNotFavicon(t *testing.T) {
 
 	r := routers.NewRouter()
 	r.Use(sessionSetup())
+	routers.SetupRouterDefaults("TST")
 	routers.SetupPublicRoutes("../../")
 	routers.SetupPrivateRoutes("../../")
 	authSetup()
@@ -75,6 +77,7 @@ func TestNotFavicon(t *testing.T) {
 func TestPingRoute(t *testing.T) {
 	r := routers.NewRouter()
 	r.Use(sessionSetup())
+	routers.SetupRouterDefaults("TST")
 	routers.SetupPublicRoutes("../../")
 	routers.SetupPrivateRoutes("../../")
 	authSetup()
@@ -90,6 +93,7 @@ func TestPingRoute(t *testing.T) {
 func TestNotRoute(t *testing.T) {
 	r := routers.NewRouter()
 	r.Use(sessionSetup())
+	routers.SetupRouterDefaults("TST")
 	routers.SetupPublicRoutes("../../")
 	routers.SetupPrivateRoutes("../../")
 	authSetup()

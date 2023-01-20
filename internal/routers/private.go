@@ -19,7 +19,7 @@ func SetupPrivateRoutes(rootPath string) {
 	postAuth.Use(controllers.EnsureLoggedIn())
 	postAuth.POST("/auth/logout", controllers.Logout)
 	postAuth.GET("/entries/new", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "entries/new.html", nil)
+		c.HTML(http.StatusOK, "entries/new.html", gin.H{"citycode": c.MustGet("citycode").(string)})
 	})
 	postAuth.POST("/entries/new", controllers.CreateEntry)
 	postAuth.PATCH("/entries/:id", controllers.UpdateEntry)

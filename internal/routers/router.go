@@ -2,6 +2,7 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/toozej/dinnerclub/internal/controllers"
 )
 
 var Router *gin.Engine
@@ -16,4 +17,10 @@ func NewRouter() *gin.Engine {
 // Resolve resolves an already initiated router
 func ResolveRouter() *gin.Engine {
 	return Router
+}
+
+func SetupRouterDefaults(cityCode string) {
+	r := ResolveRouter()
+	r.Use(controllers.SetUserStatus())
+	r.Use(controllers.SetDefaults(cityCode))
 }

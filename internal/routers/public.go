@@ -9,7 +9,6 @@ import (
 
 func SetupPublicRoutes(rootPath string) {
 	r := ResolveRouter()
-	r.Use(controllers.SetUserStatus())
 
 	// load HTML templates
 	r.LoadHTMLGlob(rootPath + "/templates/*/*.html")
@@ -33,21 +32,21 @@ func SetupPublicRoutes(rootPath string) {
 	// TODO create controllers/restaurants.go with similar FindRestaurants, FindRestaurant as Entries/Entry
 	// TODO use restaurants controllers here
 	restaurants.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "restaurants/index.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool)})
+		c.HTML(http.StatusOK, "restaurants/index.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
 	})
 	restaurants.GET("/:name", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "restaurants/restaurant.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool)})
+		c.HTML(http.StatusOK, "restaurants/restaurant.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
 	})
 
 	// user pre-authenticated authentication related routes
 	preAuth := r.Group("/auth")
 	preAuth.Use(controllers.EnsureNotLoggedIn())
 	preAuth.GET("/register", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "auth/register.html", nil)
+		c.HTML(http.StatusOK, "auth/register.html", gin.H{"citycode": c.MustGet("citycode").(string)})
 	})
 	preAuth.POST("/register", controllers.Register)
 	preAuth.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "auth/login.html", nil)
+		c.HTML(http.StatusOK, "auth/login.html", gin.H{"citycode": c.MustGet("citycode").(string)})
 	})
 	preAuth.POST("/login", controllers.Login)
 

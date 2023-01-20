@@ -19,7 +19,7 @@ import (
 	"github.com/toozej/dinnerclub/pkg/version"
 )
 
-func serveGin(rootPath string, sessionSecret string) {
+func serveGin(rootPath string, sessionSecret string, cityCode string) {
 	// init Gin router
 	r := routers.NewRouter()
 
@@ -29,6 +29,7 @@ func serveGin(rootPath string, sessionSecret string) {
 	log.Info("session system setup successfully")
 
 	// setup public and private routes
+	routers.SetupRouterDefaults(cityCode)
 	routers.SetupPublicRoutes(rootPath)
 	routers.SetupPrivateRoutes(rootPath)
 	log.Info("routes setup successfully")
@@ -77,7 +78,7 @@ func main() {
 			models.MigrateSchema()
 
 			// setup Gin router and serve
-			serveGin(".", c.SessionSecret)
+			serveGin(".", c.SessionSecret, c.CityCode)
 		},
 	}
 

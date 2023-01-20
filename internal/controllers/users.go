@@ -54,7 +54,7 @@ func DeleteUser(c *gin.Context) {
 }
 
 func GetProfile(c *gin.Context) {
-	c.HTML(http.StatusOK, "users/profile.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool)})
+	c.HTML(http.StatusOK, "users/profile.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
 }
 
 func GetCurrentUsername(c *gin.Context) string {
