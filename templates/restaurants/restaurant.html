@@ -2,18 +2,14 @@
 {{ define "restaurants/restaurant.html" }}
 {{ template "base/header.html" .}}
 
-# TODO display single restaurant here
-
-  <!--Loop over the payload variable, which is the list of restaurants-->
-  {{range .payload }}
-    <!--Create the link for the restaurant based on its ID-->
-    <a href="/restaurant/view/{{.ID}}">
-      <!--Display the title of the restaurant -->
-      <h2>{{.Title}}</h2>
-    </a>
+<section>
+    <!--Display the name of the restaurant-->
+    <h2><a href="/restaurants/{{ .restaurant.Name }}">{{ .restaurant.Name }}</a></h2>
     <!--Display the content of the restaurant-->
-    <p>{{.Content}}</p>
-  {{end}}
+    <p>Location: {{ .restaurant.Location }}</p>
+    <p>Cuisine: {{ .restaurant.Cuisine }}</p>
+    <p>Closed: {{ .restaurant.Closed }}</p>
+</section>
 
 {{ template "base/footer.html" .}}
 {{ end }}

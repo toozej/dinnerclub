@@ -1,0 +1,18 @@
+.error-messages {
+    margin-top: 1.5em;
+    margin-bottom: 2em;
+}
+.error-message {
+    font-weight: bolder;
+    color: red;
+    margin-bottom: 1em;
+}
+.flash-message {
+    font-weight: bolder;
+    color: #222222;
+    margin-bottom: 1em;
+    background-color: #f5f2aa;
+    padding: 0.75em;
+}
+
+

@@ -10,6 +10,7 @@
     <!--Use simplecss to make the application look nice-->
 	<!--From: https://github.com/kevquirk/simple.css/wiki/Getting-Started-With-Simple.css-->
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <link rel="stylesheet" href="/assets/style.css">
 
 	<!--Use GoatCounter for application analytics-->
 	<script data-goatcounter="https://stats.dinner.club/count" async src="//stats.dinner.club/count.js"></script>
@@ -18,7 +19,6 @@
   <body class="container">
     <header>
         {{ template "base/menu.html" . }}
-        <!--TODO figure out how to inject citycode-->
         <h1>{{ .citycode }} Dinner Club</h1>
     </header>
 

@@ -3,9 +3,70 @@
 {{ define "entries/update.html" }}
 {{ template "base/header.html" .}}
 
-<h1>{{.payload.Title}}</h1>
+{{ template "base/errors.html" . }}
 
-<p>{{.payload.Content}}</p>
+<h2>Update an Entry</h2>
+<form action="/entries/:id/update" method="PATCH">
+    <label for="name">Restaurant Name</label>
+    <input type="text" name="name" id="name">
+    <label>
+        <input type="checkbox" id="visited" value="true" checked="">
+        I visited this restaurant
+    </label>
+    <label for="location">Location</label>
+    <select id="location" name="location">
+        <option value="N">N</option>
+        <option value="NE">NE</option>
+        <option value="NW">NW</option>
+        <option value="SW">SW</option>
+        <option value="SE">SE</option>
+        <option value="S">S</option>
+    </select>
+    <label for="cuisine">Cuisine</label>
+    <input type="text" name="cuisine" id="cuisine">
+    <label>
+        <input type="hidden" name="closed" value="false"> 
+        <input type="checkbox" id="closed" value="true">
+        Restaurant is permanently closed
+    </label>
+    <label for="mealservice">Meal Service</label>
+    <select id="mealservice" name="mealservice">
+        <option value="breakfast">Breakfast</option>
+        <option value="brunch">Brunch</option>
+        <option value="lunch">Lunch</option>
+        <option value="happy_hour">Happy Hour</option>
+        <option value="dinner">Dinner</option>
+        <option value="drinks">Drinks</option>
+        <option value="late_night">Late Night</option>
+    </select>
+    <label for="foodrating">Food Rating</label>
+    <select id="foodrating" name="foodrating">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+    <label for="ambiencerating">Ambience Rating</label>
+    <select id="ambiencerating" name="ambiencerating">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+    <label for="valuerating">Value Rating</label>
+    <select id="valuerating" name="valuerating">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+    <label for="comments">Comments</label>
+    <input type="text" name="comments" id="comments">
+    <p><button type="submit">Submit</button></p>
+</form>
 
 {{ template "base/footer.html" .}}
 {{ end }}

@@ -28,10 +28,14 @@ func serveGin(rootPath string, sessionSecret string, cityCode string) {
 	r.Use(ses)
 	log.Info("session system setup successfully")
 
-	// setup public and private routes
+	// setup router defaults, static assets and templates
+	routers.SetupTemplates()
 	routers.SetupRouterDefaults(cityCode)
-	routers.SetupPublicRoutes(rootPath)
-	routers.SetupPrivateRoutes(rootPath)
+	routers.SetupStaticAssets()
+
+	// setup public and private routes
+	routers.SetupPublicRoutes()
+	routers.SetupPrivateRoutes()
 	log.Info("routes setup successfully")
 
 	// init auth

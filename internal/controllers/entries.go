@@ -18,7 +18,7 @@ func FindEntries(c *gin.Context) {
 	database.DB.Find(&entries)
 
 	c.HTML(http.StatusOK, "entries/index.html",
-		gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
+		gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 }
 
 // GET /entries/:id
@@ -32,12 +32,18 @@ func FindEntry(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "entries/entry.html",
-		gin.H{"entry": entry, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
+		gin.H{"entry": entry, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+}
+
+// GET /entries
+// Create new entry HTML form
+func CreateEntryGet(c *gin.Context) {
+	c.HTML(http.StatusOK, "entries/new.html", gin.H{"citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 }
 
 // POST /entries
 // Create new entry
-func CreateEntry(c *gin.Context) {
+func CreateEntryPost(c *gin.Context) {
 	// Validate input
 	entry := &models.Entry{}
 	if err := c.ShouldBind(entry); err != nil {
@@ -49,7 +55,7 @@ func CreateEntry(c *gin.Context) {
 				verr.Field())
 		}
 		c.HTML(http.StatusBadRequest, "entries/new.html",
-			gin.H{"errors": messages, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
+			gin.H{"errors": messages, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 		return
 	}
 
@@ -61,15 +67,20 @@ func CreateEntry(c *gin.Context) {
 		return
 	}
 
-	// TODO add flash for successful creation
-
+	flashMessage(c, fmt.Sprintf("New entry '%s' saved successfully.", entry.Name))
 	redirectPath := fmt.Sprintf("/entries/%d", entry.ID)
 	c.Redirect(http.StatusFound, redirectPath)
 }
 
+// GET /entries/:id/update
+// Update an entry HTML form
+func UpdateEntryGet(c *gin.Context) {
+	c.HTML(http.StatusOK, "entries/update.html", gin.H{"citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+}
+
 // PATCH /entries/:id
 // Update an entry
-func UpdateEntry(c *gin.Context) {
+func UpdateEntryPatch(c *gin.Context) {
 	// TODO use same validation and ShouldBind() from CreateEntry()
 	// Get model if exist
 	var entry models.Entry
@@ -90,7 +101,7 @@ func UpdateEntry(c *gin.Context) {
 		return
 	}
 
-	// TODO add flash for successful update
+	flashMessage(c, fmt.Sprintf("Entry '%s' updated successfully.", entry.Name))
 	redirectPath := fmt.Sprintf("/entry/%d", entry.ID)
 	c.Redirect(http.StatusFound, redirectPath)
 }
@@ -110,6 +121,6 @@ func DeleteEntry(c *gin.Context) {
 		return
 	}
 
-	// TODO add flash for successful deletion
+	flashMessage(c, fmt.Sprintf("Entry '%s' deleted successfully.", entry.Name))
 	c.Redirect(http.StatusOK, "/entries")
 }

@@ -10,6 +10,7 @@ func MigrateSchema() {
 	var schemaModels = []interface{}{
 		Entry{},
 		User{},
+		Restaurant{},
 	}
 
 	for m := range schemaModels {

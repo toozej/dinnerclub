@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ func FindUserByID(c *gin.Context) {
 		return
 	}
 
+	// TODO handle HTML and JSON returns here
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
@@ -34,6 +36,7 @@ func FindUserByUsername(c *gin.Context) {
 		return
 	}
 
+	// TODO handle HTML and JSON returns here
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
@@ -49,12 +52,15 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	database.DB.Delete(&user)
+	flashMessage(c, fmt.Sprintf("User '%s' deleted successfully.", user.Username))
 
-	c.JSON(http.StatusAccepted, gin.H{"data": true})
+	// TODO handle HTML and JSON returns here
+	c.Redirect(http.StatusAccepted, "/entries")
+	// c.JSON(http.StatusAccepted, gin.H{"data": true, "messages": flashes(c)})
 }
 
 func GetProfile(c *gin.Context) {
-	c.HTML(http.StatusOK, "users/profile.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string)})
+	c.HTML(http.StatusOK, "users/profile.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 }
 
 func GetCurrentUsername(c *gin.Context) string {
@@ -63,6 +69,7 @@ func GetCurrentUsername(c *gin.Context) string {
 
 	var user models.User
 
+	// TODO better return hygene here, likely return nil and add an error if username not found
 	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
 		return "No username found matching currently logged in UserID"
 	}

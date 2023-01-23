@@ -1,14 +1,11 @@
 package routers
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
 	"github.com/toozej/dinnerclub/internal/controllers"
 )
 
 // private routes are ones which the user must be authenticated to use
-func SetupPrivateRoutes(rootPath string) {
+func SetupPrivateRoutes() {
 	r := ResolveRouter()
 
 	profile := r.Group("/profile")
@@ -18,10 +15,9 @@ func SetupPrivateRoutes(rootPath string) {
 	postAuth := r.Group("/")
 	postAuth.Use(controllers.EnsureLoggedIn())
 	postAuth.POST("/auth/logout", controllers.Logout)
-	postAuth.GET("/entries/new", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "entries/new.html", gin.H{"citycode": c.MustGet("citycode").(string)})
-	})
-	postAuth.POST("/entries/new", controllers.CreateEntry)
-	postAuth.PATCH("/entries/:id", controllers.UpdateEntry)
+	postAuth.GET("/entries/new", controllers.CreateEntryGet)
+	postAuth.POST("/entries/new", controllers.CreateEntryPost)
+	postAuth.GET("/entries/:id/update", controllers.UpdateEntryGet)
+	postAuth.PATCH("/entries/:id", controllers.UpdateEntryPatch)
 	postAuth.DELETE("/entries/:id", controllers.DeleteEntry)
 }

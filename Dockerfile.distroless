@@ -25,9 +25,6 @@ RUN CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" ./cmd/dinnerclub/
 FROM gcr.io/distroless/static-debian11:latest
 # Copy our static executable.
 COPY --from=build /go/dinnerclub/dinnerclub /go/bin/dinnerclub
-# Copy our HTML templates and static assets
-COPY ./templates /templates/
-COPY ./assets /assets/
 # Expose port for publishing as web service
 EXPOSE 8080
 # Run the binary.

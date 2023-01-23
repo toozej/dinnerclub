@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -20,7 +21,11 @@ type LoginCreds struct {
 	Password string `form:"password" json:"-" binding:"required,min=10"`
 }
 
-func Login(c *gin.Context) {
+func LoginGet(c *gin.Context) {
+	c.HTML(http.StatusOK, "auth/login.html", gin.H{"citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+}
+
+func LoginPost(c *gin.Context) {
 	Auth := authentication.Resolve()
 	JWT := jwt.Resolve()
 
@@ -91,8 +96,6 @@ func Login(c *gin.Context) {
 
 	log.Debugf("User %s successfully logged in", user.Username)
 
-	// TODO add flash for successful login
-
 	// render response
 	// TODO respond with JSON if selected, or HTML if selected
 	// c.JSON(http.StatusOK, gin.H{
@@ -101,6 +104,7 @@ func Login(c *gin.Context) {
 	// 		"refreshToken": refreshToken,
 	// 	},
 	// })
+	flashMessage(c, fmt.Sprintf("User '%s' logged in successfully.", user.Username))
 	redirectPath := "/profile/"
 	c.Redirect(http.StatusFound, redirectPath)
 }
@@ -115,18 +119,21 @@ func Logout(c *gin.Context) {
 		})
 	}
 
-	// TODO add flash for successful login
-
 	// render response
 	// TODO respond with JSON if selected, or HTML if selected
 	// c.JSON(http.StatusOK, gin.H{
 	// 	"message": "logged out successfully",
 	// })
+	flashMessage(c, "User logged out successfully.")
 	redirectPath := "/entries/"
 	c.Redirect(http.StatusFound, redirectPath)
 }
 
-func Register(c *gin.Context) {
+func RegisterGet(c *gin.Context) {
+	c.HTML(http.StatusOK, "auth/register.html", gin.H{"citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+}
+
+func RegisterPost(c *gin.Context) {
 	// bind the input to the user's model
 	var user models.User
 	if err := c.ShouldBind(&user); err != nil {
@@ -165,13 +172,12 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// TODO add flash for successful registration
-
 	// render response
 	// TODO respond with JSON if selected, or HTML if selected
 	// c.JSON(http.StatusOK, gin.H{
 	// 	"message": "signup successful",
 	// })
+	flashMessage(c, fmt.Sprintf("New user '%s' registered successfully.", user.Username))
 	redirectPath := "/auth/login"
 	c.Redirect(http.StatusFound, redirectPath)
 }

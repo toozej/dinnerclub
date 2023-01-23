@@ -19,9 +19,22 @@ import (
 func sessionSetup() gin.HandlerFunc {
 	return session.InitSession("testing123")
 }
+
 func authSetup() {
 	jwt.New()
 	authentication.New(sessions.Resolve(), jwt.Resolve())
+}
+
+func routerSetup() *gin.Engine {
+	r := routers.NewRouter()
+	r.Use(sessionSetup())
+	routers.SetupTemplates()
+	routers.SetupRouterDefaults("TST")
+	routers.SetupStaticAssets()
+	routers.SetupPublicRoutes()
+	routers.SetupPrivateRoutes()
+	authSetup()
+	return r
 }
 
 func TestFavicon(t *testing.T) {
@@ -30,13 +43,7 @@ func TestFavicon(t *testing.T) {
 	fileContents, err := os.ReadFile("../../assets/favicon.ico")
 	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
 
-	r := routers.NewRouter()
-	r.Use(sessionSetup())
-	routers.SetupRouterDefaults("TST")
-	routers.SetupPublicRoutes("../../")
-	routers.SetupPrivateRoutes("../../")
-	authSetup()
-
+	r := routerSetup()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/favicon.ico", nil)
 	r.ServeHTTP(w, req)
@@ -55,13 +62,7 @@ func TestNotFavicon(t *testing.T) {
 	fileContents, err := os.ReadFile("../../assets/favicon.ico")
 	assert.NoError(t, err, "Expected to read favicon file from assets/favicon.ico")
 
-	r := routers.NewRouter()
-	r.Use(sessionSetup())
-	routers.SetupRouterDefaults("TST")
-	routers.SetupPublicRoutes("../../")
-	routers.SetupPrivateRoutes("../../")
-	authSetup()
-
+	r := routerSetup()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	r.ServeHTTP(w, req)
@@ -75,13 +76,7 @@ func TestNotFavicon(t *testing.T) {
 }
 
 func TestPingRoute(t *testing.T) {
-	r := routers.NewRouter()
-	r.Use(sessionSetup())
-	routers.SetupRouterDefaults("TST")
-	routers.SetupPublicRoutes("../../")
-	routers.SetupPrivateRoutes("../../")
-	authSetup()
-
+	r := routerSetup()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/ping", nil)
 	r.ServeHTTP(w, req)
@@ -91,13 +86,7 @@ func TestPingRoute(t *testing.T) {
 }
 
 func TestNotRoute(t *testing.T) {
-	r := routers.NewRouter()
-	r.Use(sessionSetup())
-	routers.SetupRouterDefaults("TST")
-	routers.SetupPublicRoutes("../../")
-	routers.SetupPrivateRoutes("../../")
-	authSetup()
-
+	r := routerSetup()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/notfound", nil)
 	r.ServeHTTP(w, req)
