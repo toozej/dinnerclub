@@ -77,7 +77,7 @@ func main() {
 			// form variable portions of Postgres connection string from config variables
 			conn_string := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d", c.PostgresHostname, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
 			// connect to Postgres database via Gorm
-			database.ConnectDatabase(conn_string)
+			database.ConnectDatabase(conn_string, c.LogLevel)
 			// auto-migrate database schema
 			models.MigrateSchema()
 
