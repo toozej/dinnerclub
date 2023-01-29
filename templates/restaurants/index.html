@@ -6,7 +6,7 @@
 {{ range .restaurants }}
 <section>
     <!--Display the name of the restaurant-->
-    <h2><a href="/restaurants/{{ .Name }}">{{ .Name }}</a></h2>
+    <h2><a href="/restaurants/{{ .ID }}">{{ .Name }}</a></h2>
     <!--Display the content of the restaurant-->
     <p>Location: {{ .Location }}</p>
     <p>Cuisine: {{ .Cuisine }}</p>

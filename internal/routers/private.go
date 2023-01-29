@@ -19,5 +19,5 @@ func SetupPrivateRoutes() {
 	postAuth.POST("/entries/new", controllers.CreateEntryPost)
 	postAuth.GET("/entries/:id/update", controllers.UpdateEntryGet)
 	postAuth.PATCH("/entries/:id", controllers.UpdateEntryPatch)
-	postAuth.DELETE("/entries/:id", controllers.DeleteEntry)
+	postAuth.DELETE("/entries/:id", controllers.DeleteEntryPost)
 }

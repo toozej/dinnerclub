@@ -13,5 +13,10 @@ type Restaurant struct {
 	Location string `form:"location" json:"location" gorm:"notNull" binding:"required"`
 	Cuisine  string `form:"cuisine" json:"cuisine" gorm:"notNull" binding:"required"`
 	Closed   bool   `form:"closed" json:"closed" gorm:"default:false"`
-	// TODO additional fields for address, website URL, reservations URL, menu URL, phone number, etc.
+	// Optional fields below
+	Address         string `form:"address" json:"address"`
+	WebsiteURL      string `form:"websiteurl" json:"websiteurl"`
+	ReservationsURL string `form:"reservationsurl" json:"reservationsurl"`
+	MenuURL         string `form:"menuurl" json:"menuurl"`
+	PhoneNumber     string `form:"phonenumber" json:"phonenumber"`
 }

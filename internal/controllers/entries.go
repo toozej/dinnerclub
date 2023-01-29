@@ -15,7 +15,7 @@ import (
 func FindEntries(c *gin.Context) {
 	var entries []models.Entry
 	// TODO sort entries from newest to oldest
-	database.DB.Find(&entries)
+	database.DB.Order("id desc").Find(&entries)
 
 	c.HTML(http.StatusOK, "entries/index.html",
 		gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
@@ -59,14 +59,19 @@ func CreateEntryPost(c *gin.Context) {
 		return
 	}
 
-	// TODO set entry.Submitter field to the username of the person submitting the form
+	// set entry.Submitter field to the username of the person submitting the form
 	entry.Submitter = GetCurrentUsername(c)
 
+	// create the new entry in the database
 	if err := database.DB.Create(&entry).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
+	// create restaurant using new entry form information
+	CreateRestaurantPost(c)
+
+	// flash a new entry message and redirect to the entry page for the newly created entry
 	flashMessage(c, fmt.Sprintf("New entry '%s' saved successfully.", entry.Name))
 	redirectPath := fmt.Sprintf("/entries/%d", entry.ID)
 	c.Redirect(http.StatusFound, redirectPath)
@@ -108,7 +113,7 @@ func UpdateEntryPatch(c *gin.Context) {
 
 // DELETE /entries/:id
 // Delete an entry
-func DeleteEntry(c *gin.Context) {
+func DeleteEntryPost(c *gin.Context) {
 	// TODO use same validation and ShouldBind() from CreateEntry()
 	var entry models.Entry
 	if err := database.DB.Where("id = ?", c.Param("id")).First(&entry).Error; err != nil {

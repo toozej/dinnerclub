@@ -24,7 +24,7 @@ func SetupPublicRoutes() {
 	// restaurants related routes
 	restaurants := r.Group("/restaurants")
 	restaurants.GET("/", controllers.FindRestaurants)
-	restaurants.GET("/:name", controllers.FindRestaurant)
+	restaurants.GET("/:id", controllers.FindRestaurant)
 
 	// user pre-authenticated authentication related routes
 	preAuth := r.Group("/auth")
