@@ -8,17 +8,33 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/toozej/dinnerclub/internal/models"
 	"github.com/toozej/dinnerclub/pkg/database"
+	"github.com/toozej/dinnerclub/pkg/pagination"
 )
 
 // GET /restaurants
 // Find all restaurants
 func FindRestaurants(c *gin.Context) {
+	pageStr := c.DefaultQuery("page", "1")
+	var restaurantsCount int64
+	if err := database.DB.Table("restaurants").Count(&restaurantsCount).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	const restaurantsPerPage = 10
+	p, err := pagination.Paginate(pageStr, int(restaurantsCount), restaurantsPerPage)
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
 	var restaurants []models.Restaurant
-	// TODO sort restaurants from newest to oldest
-	database.DB.Order("id desc").Find(&restaurants)
+	if err := database.DB.Order("id desc").Limit(restaurantsPerPage).Offset(p.Offset).Find(&restaurants).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 
 	c.HTML(http.StatusOK, "restaurants/index.html",
-		gin.H{"restaurants": restaurants, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+		gin.H{"restaurants": restaurants, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c), "p": p})
 }
 
 // GET /restaurants/:id

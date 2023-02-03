@@ -14,5 +14,22 @@
 </section>
 {{end}}
 
+<div>
+Pages: 
+{{ if ne .p.Prev 0 }}
+<a href="/restaurants/?page={{ .p.Prev }}">&laquo;</a>
+{{ end }}
+
+{{ range .p.Pages }}
+    {{ if eq . $.p.Page }}<strong>{{ . }}</strong>
+    {{ else }}<a href="/restaurants/?page={{ . }}">{{ . }}</a>
+    {{ end }}
+{{ end }}
+
+{{ if ne .p.Next 0 }}
+<a href="/restaurants/?page={{ .p.Next }}">&raquo;</a>
+{{ end }}
+</div>
+
 {{ template "base/footer.html" .}}
 {{ end }}
