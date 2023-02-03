@@ -39,6 +39,7 @@ func FindRestaurant(c *gin.Context) {
 func CreateRestaurantPost(c *gin.Context) {
 	// Validate input
 	restaurant := &models.Restaurant{}
+	// TODO figure out how to make restaurant bind when actually the stuff in c should bind to entry...
 	if err := c.ShouldBind(restaurant); err != nil {
 		verrs := err.(validator.ValidationErrors)
 		messages := make([]string, len(verrs))

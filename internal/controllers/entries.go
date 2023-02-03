@@ -8,17 +8,33 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/toozej/dinnerclub/internal/models"
 	"github.com/toozej/dinnerclub/pkg/database"
+	"github.com/toozej/dinnerclub/pkg/pagination"
 )
 
 // GET /entries
 // Find all entries
 func FindEntries(c *gin.Context) {
+	pageStr := c.DefaultQuery("page", "1")
+	var entriesCount int64
+	if err := database.DB.Table("entries").Count(&entriesCount).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	const entriesPerPage = 10
+	p, err := pagination.Paginate(pageStr, int(entriesCount), entriesPerPage)
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
 	var entries []models.Entry
-	// TODO sort entries from newest to oldest
-	database.DB.Order("id desc").Find(&entries)
+	if err := database.DB.Order("id desc").Limit(entriesPerPage).Offset(p.Offset).Find(&entries).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 
 	c.HTML(http.StatusOK, "entries/index.html",
-		gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+		gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c), "p": p})
 }
 
 // GET /entries/:id
@@ -68,8 +84,9 @@ func CreateEntryPost(c *gin.Context) {
 		return
 	}
 
+	// TODO re-enable createrestaurantpost()
 	// create restaurant using new entry form information
-	CreateRestaurantPost(c)
+	// CreateRestaurantPost(c)
 
 	// flash a new entry message and redirect to the entry page for the newly created entry
 	flashMessage(c, fmt.Sprintf("New entry '%s' saved successfully.", entry.Name))
