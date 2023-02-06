@@ -7,20 +7,12 @@
 <section>
     <!--Display the title of the entry which is also a link based on its ID-->
     <h2><a href="/entries/{{ .ID }}">{{ .Name }}</a></h2>
-    <!--Display the content of the entry-->
+    <!--Display required fields of the entry-->
     <p>Submitter: {{ .Submitter }}</p>
     <p>Date: {{ .CreatedAt.Format "Jan 02 2006" }}</p>
     <p>Visited: {{ .Visited }}</p>
     <p>Location: {{ .Location }}</p>
     <p>Cuisine: {{ .Cuisine }}</p>
-    <p>(Optional fields below)</p>
-    <p>Closed: {{ .Closed }}</p>
-    <p>Meal Service: {{ .MealService }}</p>
-    <p>Ordered: {{ .Ordered }}</p>
-    <p>Food Rating: {{ .FoodRating }}</p>
-    <p>Ambience Rating: {{ .AmbienceRating }}</p>
-    <p>Value Rating: {{ .ValueRating }}</p>
-    <p>Comments: {{ .Comments }}</p>
 </section>
 {{end}}
 

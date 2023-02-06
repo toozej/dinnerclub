@@ -69,6 +69,11 @@ up: ## Run Docker Compose project
 down: ## Stop running Docker Compose project
 	docker compose -f docker-compose.yml down --remove-orphans
 
+rebuild: ## Rebuild running application container in Docker Compose project
+	docker compose -f docker-compose.yml stop dinnerclub_app
+	docker compose -f docker-compose.yml build --pull dinnerclub_app
+	docker compose -f docker-compose.yml up -d dinnerclub_app
+
 logs: ## View running Docker Compose project logs
 	docker compose -f docker-compose.yml logs --tail=100 -f
 

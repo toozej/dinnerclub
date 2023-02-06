@@ -32,9 +32,8 @@ func LoginPost(c *gin.Context) {
 	// validate and bind user input
 	var loginData LoginCreds
 	if err := c.ShouldBind(&loginData); err != nil {
-		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
-			"message": err.Error(),
-		})
+		flashMessage(c, "The username or password you entered is incorrect.")
+		log.Debugf("Error binding login credentials to login struct: %s", err.Error())
 		return
 	}
 
@@ -43,17 +42,17 @@ func LoginPost(c *gin.Context) {
 	result := database.DB.Where("username = ?", loginData.Username).First(&user)
 	// check if the record not found
 	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
-			"message": "wrong credentials",
-		})
+		c.Redirect(http.StatusFound, "/auth/login")
+		flashMessage(c, "The username or password you entered is incorrect.")
+		log.Debugf("%s", result.Error)
 		return
 	}
 
 	// handle database error incase there is any
 	if result.Error != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": "someting went wrong getting user from database",
-		})
+		c.Redirect(http.StatusFound, "/auth/login")
+		flashMessage(c, "The username or password you entered is incorrect.")
+		log.Debugf("Error getting user from database: %s", result.Error)
 		return
 	}
 
@@ -61,34 +60,33 @@ func LoginPost(c *gin.Context) {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password))
 	if err != nil {
 		// wrong password
-		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
-			"message": "wrong credentials",
-		})
+		c.Redirect(http.StatusFound, "/auth/login")
+		flashMessage(c, "The username or password you entered is incorrect.")
+		log.Debugf("Wrong password entered: %s", err)
 		return
 	}
 
 	// generate the jwt token
 	_, err = JWT.CreateToken(user.ID)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": "something went wrong creating JWT token",
-		})
+		c.AbortWithStatus(http.StatusInternalServerError)
+		log.Debugf("Error creating JWT token: %s", err)
+		return
 	}
 
 	// generate the token
 	_, err = JWT.CreateRefreshToken(user.ID)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": "something went wrong refreshing JWT token",
-		})
+		c.AbortWithStatus(http.StatusInternalServerError)
+		log.Debugf("Error refreshing JWT token: %s", err)
+		return
 	}
 
 	// login the user
 	err = Auth.Login(user.ID, c)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": "something went wrong logging in",
-		})
+		c.AbortWithStatus(http.StatusInternalServerError)
+		log.Debugf("Error logging in the user: %s", err)
 	}
 
 	// set user as logged in via Gin context

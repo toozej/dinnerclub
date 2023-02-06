@@ -84,8 +84,8 @@ func CreateEntryPost(c *gin.Context) {
 		return
 	}
 
-	// TODO re-enable createrestaurantpost()
 	// create restaurant using new entry form information
+	// TODO figure out how to get binding to work for two different structs (entry and restaurant)
 	// CreateRestaurantPost(c)
 
 	// flash a new entry message and redirect to the entry page for the newly created entry
@@ -130,7 +130,7 @@ func UpdateEntryPatch(c *gin.Context) {
 
 // DELETE /entries/:id
 // Delete an entry
-func DeleteEntryPost(c *gin.Context) {
+func DeleteEntry(c *gin.Context) {
 	// TODO use same validation and ShouldBind() from CreateEntry()
 	var entry models.Entry
 	if err := database.DB.Where("id = ?", c.Param("id")).First(&entry).Error; err != nil {

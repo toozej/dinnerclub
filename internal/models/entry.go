@@ -18,6 +18,8 @@ type Entry struct {
 	Closed         bool   `form:"closed" json:"closed" gorm:"default:false"`
 	MealService    string `form:"mealservice" json:"mealservice"`
 	Ordered        string `form:"ordered" json:"ordered"`
+	OrderNext      string `form:"ordernext" json:"ordernext"`
+	DoNotOrder     string `form:"donotorder" json:"donotorder"`
 	FoodRating     int    `form:"foodrating" json:"foodrating"`
 	AmbienceRating int    `form:"ambiencerating" json:"ambiencerating"`
 	ValueRating    int    `form:"valuerating" json:"valuerating"`

@@ -1,10 +1,40 @@
 <!--profile.html-->
 {{ define "users/profile.html" }}
 {{ template "base/header.html" .}}
+{{ template "base/errors.html" . }}
 
-<h1>{{.payload.Title}}</h1>
-<h2>PROFILE PAGE GOES HERE</h2>
-<p>{{.payload.Content}}</p>
+<h2>User Profile</h2>
+
+<section>
+    <!--Display the content of the user profile-->
+    <p>Username: {{ .user.Username }}</p>
+    <p>Name: {{ .user.Firstname }} {{ .user.Lastname }}</p>
+    <p>User since: {{ .user.CreatedAt.Format "Jan 02 2006" }}</p>
+</section>
+
+<section>
+    <p>Change Profile Information</p>
+    <form action="/profile/update" method="POST">
+        <label for="newpassword">New Password</label>
+        <input type="password" name="newpassword" id="newpassword" minlength="10" autocomplete="new-password">
+        <label for="newusername">New Username</label>
+        <input type="text" name="newusername" id="newusername">
+        <label for="email">Email Address</label>
+        <input type="text" name="email" id="email">
+        <label for="firstname">First Name</label>
+        <input type="text" name="firstname" id="firstname">
+        <label for="lastname">Last Name</label>
+        <input type="text" name="lastname" id="lastname">
+        <button type="submit">Update</button>
+    </form>
+</section>
+
+<section>
+    <form action="/profile/delete" method="POST">
+        <label for="delete">Delete your Dinner Club account? This cannot be undone.</label>
+        <button type="submit">Yes, Delete My Account</button>
+    </form>
+</section>
 
 {{ template "base/footer.html" .}}
 {{ end }}
