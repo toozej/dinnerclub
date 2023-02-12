@@ -1,23 +1,23 @@
 <!--menu.html-->
 {{ define "base/menu.html" }}
 
-<nav>
-    <a href="/">Entries</a>
-    <a href="/restaurants">Restaurants</a>
+<table>
+    <tr>
+        <a href="/"><button style="margin:5px;">Entries</button></a>
+        <a href="/restaurants"><button style="margin:5px;">Restaurants</button></a>
 {{ if .is_logged_in }}
-    <!--should be shown only during authenticated view -->
-    <a href="/profile">Profile</a>
-    <!--TODO figure out how to get a HTML button that does a POST to logout but isn't really ugly like a form -->
-    <form action="/auth/logout" method="post">
-        <button type="submit">Logout</button>
-    </form>
-    <a href="/entries/new">+</a>
+        <!--should be shown only during authenticated view -->
+        <a href="/profile"><button style="margin:5px;">Profile</button></a>
+        <form action="/auth/logout" method="post">
+            <button style="margin:5px;" type="submit">Logout</button>
+        </form>
+        <a href="/entries/new"><button style="margin:5px;">+</button></a>
 {{ else }}
-  <!--should be shown for unauthenticated view-->
-  <a href="/auth/register">Register</a>
-  <a href="/auth/login">Login</a>
+        <!--should be shown for unauthenticated view-->
+        <a href="/auth/register"><button style="margin:5px;">Register</button></a>
+        <a href="/auth/login"><button style="margin:5px;">Login</button></a>
 {{ end }}
-
-</nav>
+    </tr>
+</table>
 
 {{ end }}
