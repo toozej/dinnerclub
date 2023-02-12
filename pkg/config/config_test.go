@@ -18,6 +18,7 @@ func TestLoadConfig(t *testing.T) {
 		JWTSecret:             "test_jwt_secret",
 		JWTRefreshTokenSecret: "test_jwt_refresh_token_secret",
 		SessionSecret:         "test_session_secret",
+		ReferralCode:          "test_referral_code",
 	}
 
 	// Call LoadConfig and check the result

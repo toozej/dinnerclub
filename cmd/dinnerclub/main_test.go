@@ -29,7 +29,7 @@ func routerSetup() *gin.Engine {
 	r := routers.NewRouter()
 	r.Use(sessionSetup())
 	routers.SetupTemplates()
-	routers.SetupRouterDefaults("TST")
+	routers.SetupRouterDefaults("TST", "test_referral_code")
 	routers.SetupStaticAssets()
 	routers.SetupPublicRoutes()
 	routers.SetupPrivateRoutes()

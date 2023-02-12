@@ -21,6 +21,7 @@ type appConfig struct {
 	JWTSecret             string `mapstructure:"JWT_SECRET"`
 	JWTRefreshTokenSecret string `mapstructure:"JWT_REFRESH_TOKEN_SECRET"`
 	SessionSecret         string `mapstructure:"SESSION_SECRET"`
+	ReferralCode          string `mapstructure:"REFERRAL_CODE"`
 }
 
 // LoadConfig loads config from files

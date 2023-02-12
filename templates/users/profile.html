@@ -10,6 +10,9 @@
     <p>Username: {{ .user.Username }}</p>
     <p>Name: {{ .user.Firstname }} {{ .user.Lastname }}</p>
     <p>User since: {{ .user.CreatedAt.Format "Jan 02 2006" }}</p>
+    <form action="/entries/submittedby/{{ .user.Username }}" method="post">
+        <button type="View">My entries</button>
+    </form>
 </section>
 
 <section>

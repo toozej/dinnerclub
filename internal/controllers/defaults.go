@@ -9,9 +9,10 @@ import (
 )
 
 // sets default gin context variables used across the entire site
-func SetDefaults(cityCode string) gin.HandlerFunc {
+func SetDefaults(cityCode string, referralCode string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("citycode", strings.ToUpper(cityCode))
+		c.Set("referralcode", referralCode)
 	}
 }
 

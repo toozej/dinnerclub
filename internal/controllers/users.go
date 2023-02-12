@@ -82,9 +82,9 @@ func GetProfile(c *gin.Context) {
 		gin.H{"user": user, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 }
 
-// PATCH /profile/update
+// POST /profile/update
 // Update user profile
-func UpdateProfilePatch(c *gin.Context) {
+func UpdateProfile(c *gin.Context) {
 	Auth := authentication.Resolve()
 	userID, _ := Auth.UserID(c)
 	// Get model if exist

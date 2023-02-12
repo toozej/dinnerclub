@@ -6,7 +6,7 @@
 {{ template "base/errors.html" . }}
 
 <h2>Update an Entry</h2>
-<form action="/entries/:id/update" method="PATCH">
+<form action="/entries/{{ .entry.ID }}/update" method="POST">
     <label for="name">Restaurant Name</label>
     <input type="text" name="name" id="name">
     <label>

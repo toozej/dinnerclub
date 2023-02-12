@@ -11,7 +11,7 @@ func SetupPrivateRoutes() {
 	profile := r.Group("/profile")
 	profile.Use(controllers.EnsureLoggedIn())
 	profile.GET("/", controllers.GetProfile)
-	profile.POST("/update", controllers.UpdateProfilePatch)
+	profile.POST("/update", controllers.UpdateProfile)
 	profile.DELETE("/delete", controllers.DeleteUser)
 
 	postAuth := r.Group("/")
@@ -20,6 +20,8 @@ func SetupPrivateRoutes() {
 	postAuth.GET("/entries/new", controllers.CreateEntryGet)
 	postAuth.POST("/entries/new", controllers.CreateEntryPost)
 	postAuth.GET("/entries/:id/update", controllers.UpdateEntryGet)
-	postAuth.PATCH("/entries/:id", controllers.UpdateEntryPatch)
-	postAuth.DELETE("/entries/:id", controllers.DeleteEntry)
+	postAuth.POST("/entries/:id/update", controllers.UpdateEntryPost)
+	postAuth.POST("/entries/:id/delete", controllers.DeleteEntry)
+	postAuth.GET("/entries/submittedby/:username", controllers.FindEntryByUsername)
+	postAuth.POST("/entries/submittedby/:username", controllers.FindEntryByUsername)
 }

@@ -2,6 +2,16 @@
 {{ define "entries/entry.html" }}
 {{ template "base/header.html" .}}
 
+{{ if .is_mine }}
+    <!--should be shown only during authenticated view of your own entries-->
+    <form action="/entries/{{ .entry.ID }}/update" method="GET">
+        <button type="submit">Update Entry</button>
+    </form>
+    <form action="/entries/{{ .entry.ID }}/delete" method="POST">
+        <button type="submit">Delete Entry</button>
+    </form>
+{{ end }}
+
 <section>
     <!--Display the title of the entry which is also a link based on its ID-->
     <h2><a href="/entries/{{ .entry.ID }}">{{ .entry.Name }}</a></h2>

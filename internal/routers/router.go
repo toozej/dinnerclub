@@ -25,10 +25,10 @@ func ResolveRouter() *gin.Engine {
 	return Router
 }
 
-func SetupRouterDefaults(cityCode string) {
+func SetupRouterDefaults(cityCode string, referralCode string) {
 	r := ResolveRouter()
 	r.Use(controllers.SetUserStatus())
-	r.Use(controllers.SetDefaults(cityCode))
+	r.Use(controllers.SetDefaults(cityCode, referralCode))
 }
 
 func faviconFS() http.FileSystem {

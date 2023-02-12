@@ -11,6 +11,22 @@ import (
 	"github.com/toozej/dinnerclub/pkg/pagination"
 )
 
+type EntryUpdate struct {
+	Name           string `form:"name" json:"name" gorm:"notNull"`
+	Location       string `form:"location" json:"location" gorm:"notNull"`
+	Cuisine        string `form:"cuisine" json:"cuisine" gorm:"notNull"`
+	Visited        bool   `form:"visited" json:"visited"`
+	Closed         bool   `form:"closed" json:"closed" gorm:"default:false"`
+	MealService    string `form:"mealservice" json:"mealservice"`
+	Ordered        string `form:"ordered" json:"ordered"`
+	OrderNext      string `form:"ordernext" json:"ordernext"`
+	DoNotOrder     string `form:"donotorder" json:"donotorder"`
+	FoodRating     int    `form:"foodrating" json:"foodrating"`
+	AmbienceRating int    `form:"ambiencerating" json:"ambiencerating"`
+	ValueRating    int    `form:"valuerating" json:"valuerating"`
+	Comments       string `form:"comments" json:"comments"`
+}
+
 // GET /entries
 // Find all entries
 func FindEntries(c *gin.Context) {
@@ -47,14 +63,50 @@ func FindEntry(c *gin.Context) {
 		return
 	}
 
+	// determine if the entry's submitter is the currently logged in user
+	// if so, additional entry options like update and delete will be available
+	var mine bool
+	if entry.Submitter == GetCurrentUsername(c) {
+		mine = true
+	} else {
+		mine = false
+	}
+
 	c.HTML(http.StatusOK, "entries/entry.html",
-		gin.H{"entry": entry, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+		gin.H{"entry": entry, "is_logged_in": c.MustGet("is_logged_in").(bool), "is_mine": mine, "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+}
+
+// GET /entries/submittedby/:username
+// Find entries submitted by username
+func FindEntryByUsername(c *gin.Context) {
+	pageStr := c.DefaultQuery("page", "1")
+	var entriesCount int64
+	if err := database.DB.Table("entries").Count(&entriesCount).Where("submitter = ?", c.Param("username")).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	const entriesPerPage = 10
+	p, err := pagination.Paginate(pageStr, int(entriesCount), entriesPerPage)
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	var entries []models.Entry
+	if err := database.DB.Where("submitter = ?", c.Param("username")).Order("id desc").Limit(entriesPerPage).Offset(p.Offset).Find(&entries).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.HTML(http.StatusOK, "entries/index.html",
+		gin.H{"entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c), "p": p})
+
 }
 
 // GET /entries
 // Create new entry HTML form
 func CreateEntryGet(c *gin.Context) {
-	c.HTML(http.StatusOK, "entries/new.html", gin.H{"citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+	c.HTML(http.StatusOK, "entries/new.html", gin.H{"is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 }
 
 // POST /entries
@@ -97,13 +149,18 @@ func CreateEntryPost(c *gin.Context) {
 // GET /entries/:id/update
 // Update an entry HTML form
 func UpdateEntryGet(c *gin.Context) {
-	c.HTML(http.StatusOK, "entries/update.html", gin.H{"citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+	var entry models.Entry
+
+	if err := database.DB.Where("id = ?", c.Param("id")).First(&entry).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		return
+	}
+	c.HTML(http.StatusOK, "entries/update.html", gin.H{"entry": entry, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 }
 
-// PATCH /entries/:id
+// POST /entries/:id/update
 // Update an entry
-func UpdateEntryPatch(c *gin.Context) {
-	// TODO use same validation and ShouldBind() from CreateEntry()
+func UpdateEntryPost(c *gin.Context) {
 	// Get model if exist
 	var entry models.Entry
 	if err := database.DB.Where("id = ?", c.Param("id")).First(&entry).Error; err != nil {
@@ -112,19 +169,36 @@ func UpdateEntryPatch(c *gin.Context) {
 	}
 
 	// Validate input
-	var input models.Entry
+	var input EntryUpdate
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := database.DB.Model(&entry).Updates(input).Error; err != nil {
+	// map EntryUpdate input struct fields to models.Entry struct
+	updateEntry := models.Entry{
+		Name:           input.Name,
+		Location:       input.Location,
+		Cuisine:        input.Cuisine,
+		Visited:        input.Visited,
+		Closed:         input.Closed,
+		MealService:    input.MealService,
+		Ordered:        input.Ordered,
+		OrderNext:      input.OrderNext,
+		DoNotOrder:     input.DoNotOrder,
+		FoodRating:     input.FoodRating,
+		AmbienceRating: input.AmbienceRating,
+		ValueRating:    input.ValueRating,
+		Comments:       input.Comments,
+	}
+
+	if err := database.DB.Model(&entry).Updates(&updateEntry).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
 	flashMessage(c, fmt.Sprintf("Entry '%s' updated successfully.", entry.Name))
-	redirectPath := fmt.Sprintf("/entry/%d", entry.ID)
+	redirectPath := fmt.Sprintf("/entries/%d", entry.ID)
 	c.Redirect(http.StatusFound, redirectPath)
 }
 
@@ -144,5 +218,5 @@ func DeleteEntry(c *gin.Context) {
 	}
 
 	flashMessage(c, fmt.Sprintf("Entry '%s' deleted successfully.", entry.Name))
-	c.Redirect(http.StatusOK, "/entries")
+	c.Redirect(http.StatusFound, "/entries")
 }

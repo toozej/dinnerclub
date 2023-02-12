@@ -127,35 +127,48 @@ func Logout(c *gin.Context) {
 	c.Redirect(http.StatusFound, redirectPath)
 }
 
+// GET /auth/register
+// Display registration HTML form
 func RegisterGet(c *gin.Context) {
 	c.HTML(http.StatusOK, "auth/register.html", gin.H{"citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 }
 
+// POST /auth/register
+// Create a new user / register a new user
 func RegisterPost(c *gin.Context) {
 	// bind the input to the user's model
 	var user models.User
 	if err := c.ShouldBind(&user); err != nil {
-		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
-			"message": err.Error(),
-		})
+		flashMessage(c, "The registration information you entered is incorrect, please try again.")
+		log.Debugf("Error binding user credentials to user model struct: %s", err.Error())
 		return
 	}
 
 	// check if there is a record with the given username
 	res := database.DB.Where("username = ?", user.Username).First(&models.User{})
 	if res.Error == nil {
-		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
-			"message": "user already signed up",
-		})
+		c.Redirect(http.StatusFound, "/auth/register")
+		flashMessage(c, "User already signed up.")
+		log.Debugf("User already signed up: %s", res.Error)
+		return
+	}
+
+	// check the referral code from registration form matches the one from environment variable/config
+	referralCode, _ := c.Get("referralcode")
+	if user.ReferralCode != referralCode {
+		c.Redirect(http.StatusFound, "/auth/register")
+		flashMessage(c, "The referral code you entered is incorrect.")
+		log.Debugf("Invalid referral code: %s", user.ReferralCode)
 		return
 	}
 
 	// hash the passowrd
 	hahsedPWD, err := hashPassword(user.Password)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": err,
-		})
+		// wrong password
+		c.Redirect(http.StatusFound, "/auth/register")
+		flashMessage(c, "The username or password you entered is incorrect.")
+		log.Debugf("Wrong password entered: %s", err)
 		return
 	}
 
@@ -164,9 +177,8 @@ func RegisterPost(c *gin.Context) {
 	// create the db record
 	res = database.DB.Create(&user)
 	if res.Error != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": res.Error.Error(),
-		})
+		c.AbortWithStatus(http.StatusInternalServerError)
+		log.Debugf("Error creating new user record: %s", res.Error.Error())
 		return
 	}
 
