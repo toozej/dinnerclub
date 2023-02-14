@@ -1,5 +1,5 @@
 # setup project and deps
-FROM golang:1.19-bullseye AS init
+FROM golang:1.20-bullseye AS init
 
 WORKDIR /go/dinnerclub/
 
