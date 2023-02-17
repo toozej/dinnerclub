@@ -17,13 +17,12 @@
   </head>
 
   <body class="container">
-    <header>
+    <header class="menu">
         {{ template "base/menu.html" . }}
         <h1>{{ .citycode }} Dinner Club</h1>
     </header>
 
-    <!--TODO add flashing messages for stuff like new entry successfully created, logged out successfully, etc.-->
-    <!--https://universalglue.dev/posts/gin-sessions/-->
+    <div class="main">
     {{ if .messages }}
     {{ range .messages }}
     <div class="flash-message" role="alert">
