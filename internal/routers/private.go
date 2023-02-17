@@ -24,4 +24,5 @@ func SetupPrivateRoutes() {
 	postAuth.POST("/entries/:id/delete", controllers.DeleteEntry)
 	postAuth.GET("/entries/submittedby/:username", controllers.FindEntryByUsername)
 	postAuth.POST("/entries/submittedby/:username", controllers.FindEntryByUsername)
+	postAuth.GET("/status", controllers.StatusGet)
 }

@@ -75,14 +75,14 @@ func TestNotFavicon(t *testing.T) {
 	assert.NotEqual(t, fileContents, body)
 }
 
-func TestPingRoute(t *testing.T) {
+func TestHealthRoute(t *testing.T) {
 	r := routerSetup()
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, "/ping", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/health", nil)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "pong", w.Body.String())
+	assert.Equal(t, "ok", w.Body.String())
 }
 
 func TestNotRoute(t *testing.T) {

@@ -34,15 +34,6 @@ func SetupPublicRoutes() {
 	preAuth.GET("/login", controllers.LoginGet)
 	preAuth.POST("/login", controllers.LoginPost)
 
-	// health and status routes (which are identical)
-	// TODO include database connectivity health
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, "ok")
-	})
-	r.GET("/status", func(c *gin.Context) {
-		c.JSON(http.StatusOK, "ok")
-	})
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
+	// general healthcheck route
+	r.GET("/health", controllers.HealthGet)
 }
