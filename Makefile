@@ -33,7 +33,7 @@ else
 	OPENER=open
 endif
 
-.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs docs docs-generate docs-serve clean help
+.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install deploy deploy-secrets get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs docs docs-generate docs-serve clean help
 
 all: vet pre-commit clean test build verify run ## Run default workflow via Docker
 local: local-update-deps local-vendor local-vet pre-commit clean local-test local-cover local-build local-sign local-verify local-run ## Run default workflow using locally installed Golang toolchain
@@ -131,6 +131,20 @@ local-verify: get-cosign-pub-key ## Verify locally compiled binary
 install: local-build local-verify ## Install compiled binary to local machine
 	sudo cp $(CURDIR)/dinnerclub /usr/local/bin/dinnerclub
 	sudo chmod 0755 /usr/local/bin/dinnerclub
+
+deploy: build deploy-secrets ## Deploy latest built Docker image, env vars, and secrets to fly.io
+	fly deploy $(CURDIR) --local-only
+
+deploy-secrets: ## Deploy secrets to fly.io
+	if test ! -e $(CURDIR)/app.env; then \
+		echo "No app secrets found, need to add them to ./app.env. See README.md for more info"; \
+	fi
+	@while read -r SECRET; do \
+		if [[ "$${SECRET}" =~ .*SECRET.*|.*PASSWORD.*|.*REFERRAL.* ]]; then \
+			flyctl secrets set $${SECRET}; \
+		fi; \
+	done < $(CURDIR)/app.env
+	flyctl secrets list
 
 docker-login: ## Login to Docker registries used to publish images to
 	if test -e $(CURDIR)/cicd.env; then \
