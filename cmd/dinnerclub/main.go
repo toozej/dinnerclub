@@ -52,7 +52,7 @@ func serveGin(rootPath string, sessionSecret string, cityCode string, referralCo
 
 func main() {
 	// load application configurations
-	if err := config.LoadConfig("./"); err != nil {
+	if err := config.LoadConfig("./app.env"); err != nil {
 		log.Fatalf("invalid application configuration: %s", err)
 	}
 	c := config.Config
@@ -71,13 +71,18 @@ func main() {
 		Long:  `Main entrypoint into the dinnerclub web application`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO remove printing of sensitive env vars
-			// TODO make viper load config from OS environment variables as well as *.env files
 			log.Debugf("Loaded config: %+v\n", c)
 
-			// form variable portions of Postgres connection string from config variables
-			conn_string := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d", c.PostgresHostname, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
+			var connString string
+			if c.DatabaseURL != "" {
+				// Postgres connection string is already in environment as DATABASE_URL
+				connString = c.DatabaseURL
+			} else {
+				// form Postgres connection string from config variables
+				connString = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=America/Los_Angeles", c.PostgresHostname, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
+			}
 			// connect to Postgres database via Gorm
-			database.ConnectDatabase(conn_string, c.LogLevel)
+			database.ConnectDatabase(connString, c.LogLevel)
 			// auto-migrate database schema
 			models.MigrateSchema()
 
