@@ -7,6 +7,9 @@ cosign.key
 .env
 /*.env
 
+# backups
+backups/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

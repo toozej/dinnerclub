@@ -22,7 +22,7 @@ ARG LDFLAGS
 RUN CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" ./cmd/dinnerclub/
 
 # runtime image
-FROM scratch
+FROM scratch as runtime
 # Copy our static executable.
 COPY --from=build /go/dinnerclub/dinnerclub /go/bin/dinnerclub
 # Expose port for publishing as web service

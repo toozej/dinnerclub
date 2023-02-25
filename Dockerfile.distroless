@@ -22,7 +22,7 @@ ARG LDFLAGS
 RUN CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" ./cmd/dinnerclub/
 
 # runtime image including CA certs and tzdata
-FROM gcr.io/distroless/static-debian11:latest
+FROM gcr.io/distroless/static-debian11:latest as runtime
 # Copy our static executable.
 COPY --from=build /go/dinnerclub/dinnerclub /go/bin/dinnerclub
 # Expose port for publishing as web service

@@ -33,7 +33,11 @@ else
 	OPENER=open
 endif
 
-.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install deploy deploy-secrets get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs docs docs-generate docs-serve clean help
+DEPLOY_HOSTNAME = $(shell grep DEPLOY_HOSTNAME ./deploy.env | awk -F= '{print $$2}')
+DEPLOY_APPNAME = $(subst .,,$(DEPLOY_HOSTNAME))
+DEPLOY_POSTGRES_PASSWORD = $(shell grep DEPLOY_POSTGRES_PASSWORD ./deploy.env | awk -F= '{print $$2}')
+
+.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install deploy deploy-secrets deploy-only deploy-ip deploy-cert backup get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs docs docs-generate docs-serve clean help
 
 all: vet pre-commit clean test build verify run ## Run default workflow via Docker
 local: local-update-deps local-vendor local-vet pre-commit clean local-test local-cover local-build local-sign local-verify local-run ## Run default workflow using locally installed Golang toolchain
@@ -132,8 +136,19 @@ install: local-build local-verify ## Install compiled binary to local machine
 	sudo cp $(CURDIR)/dinnerclub /usr/local/bin/dinnerclub
 	sudo chmod 0755 /usr/local/bin/dinnerclub
 
-deploy: build deploy-secrets ## Deploy latest built Docker image, env vars, and secrets to fly.io
-	fly deploy $(CURDIR) --local-only
+deploy: deploy-secrets deploy-only deploy-ip deploy-cert ## Deploy to fly.io
+	flyctl status
+
+deploy-only: ## Deploy locally built runtime image to fly.io
+	flyctl deploy $(CURDIR) --local-only --build-target runtime 
+
+deploy-ip: ## Allocate an IP address for deployment in fly.io
+	flyctl ips list | grep v4 || flyctl ips allocate-v4
+	flyctl ips list
+
+deploy-cert: ## Provision a SSL certificate for deployment in fly.io
+	flyctl certs list | grep $(DEPLOY_HOSTNAME) || flyctl certs create "$(DEPLOY_HOSTNAME)"
+	flyctl certs list
 
 deploy-secrets: ## Deploy secrets to fly.io
 	if test ! -e $(CURDIR)/app.env; then \
@@ -144,7 +159,13 @@ deploy-secrets: ## Deploy secrets to fly.io
 			flyctl secrets set $${SECRET}; \
 		fi; \
 	done < $(CURDIR)/app.env
-	flyctl secrets list
+	flyctl config env
+
+backup: ## Backup dinnerclub database in fly.io to localhost
+	flyctl proxy 5434:5432 -a $(DEPLOY_APPNAME)-db &
+	sleep 5
+	PGPASSWORD=$(DEPLOY_POSTGRES_PASSWORD) pg_dump -h localhost -p 5434 -U $(DEPLOY_APPNAME) dinnerclub > ./backups/flyio_$(DEPLOY_APPNAME)_dinnerclub_$(NOW).sql
+	pkill -15 -f 'flyctl proxy'
 
 docker-login: ## Login to Docker registries used to publish images to
 	if test -e $(CURDIR)/cicd.env; then \
