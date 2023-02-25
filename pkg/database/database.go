@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -27,7 +26,7 @@ func ConnectDatabase(connString string, logLevel string) {
 		gconfig = &gorm.Config{}
 	}
 
-	dsn := fmt.Sprintf("%s sslmode=disable TimeZone=America/Los_Angeles", connString)
+	dsn := connString
 	db, err = gorm.Open(postgres.Open(dsn), gconfig)
 	for err != nil {
 		log.Printf("error connecting to database %v", err)

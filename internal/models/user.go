@@ -11,5 +11,5 @@ type User struct {
 	Firstname    string `gorm:"size:255" form:"firstname" json:"firstname"`
 	Lastname     string `gorm:"size:255" form:"lastname" json:"lastname"`
 	Email        string `gorm:"size:255;unique" form:"email" json:"email"`
-	ReferralCode string `gorm:"size:255;unique" form:"referralcode" json:"-"`
+	ReferralCode string `gorm:"size:255" form:"referralcode" json:"-"`
 }
