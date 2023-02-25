@@ -140,7 +140,7 @@ deploy: deploy-secrets deploy-only deploy-ip deploy-cert ## Deploy to fly.io
 	flyctl status
 
 deploy-only: ## Deploy locally built runtime image to fly.io
-	flyctl deploy $(CURDIR) --local-only --build-target runtime 
+	flyctl deploy $(CURDIR) --local-only
 
 deploy-ip: ## Allocate an IP address for deployment in fly.io
 	flyctl ips list | grep v4 || flyctl ips allocate-v4
@@ -164,7 +164,7 @@ deploy-secrets: ## Deploy secrets to fly.io
 backup: ## Backup dinnerclub database in fly.io to localhost
 	flyctl proxy 5434:5432 -a $(DEPLOY_APPNAME)-db &
 	sleep 5
-	PGPASSWORD=$(DEPLOY_POSTGRES_PASSWORD) pg_dump -h localhost -p 5434 -U $(DEPLOY_APPNAME) dinnerclub > ./backups/flyio_$(DEPLOY_APPNAME)_dinnerclub_$(NOW).sql
+	PGPASSWORD=$(DEPLOY_POSTGRES_PASSWORD) pg_dump -h localhost -p 5434 -U $(DEPLOY_APPNAME) $(DEPLOY_APPNAME) > ./backups/flyio_$(DEPLOY_APPNAME)_dinnerclub_$(NOW).sql
 	pkill -15 -f 'flyctl proxy'
 
 docker-login: ## Login to Docker registries used to publish images to
