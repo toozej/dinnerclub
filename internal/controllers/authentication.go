@@ -17,7 +17,7 @@ import (
 )
 
 type LoginCreds struct {
-	Username string `form:"username" json:"username" binding:"required,alphanum"`
+	Username string `form:"username" json:"username" binding:"required,alphanum,lowercase"`
 	Password string `form:"password" json:"-" binding:"required,min=10"`
 }
 
@@ -32,6 +32,7 @@ func LoginPost(c *gin.Context) {
 	// validate and bind user input
 	var loginData LoginCreds
 	if err := c.ShouldBind(&loginData); err != nil {
+		c.Redirect(http.StatusFound, "/auth/login")
 		flashMessage(c, "The username or password you entered is incorrect.")
 		log.Debugf("Error binding login credentials to login struct: %s", err.Error())
 		return
@@ -139,6 +140,7 @@ func RegisterPost(c *gin.Context) {
 	// bind the input to the user's model
 	var user models.User
 	if err := c.ShouldBind(&user); err != nil {
+		c.Redirect(http.StatusFound, "/auth/register")
 		flashMessage(c, "The registration information you entered is incorrect, please try again.")
 		log.Debugf("Error binding user credentials to user model struct: %s", err.Error())
 		return

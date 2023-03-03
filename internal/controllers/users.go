@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -12,11 +13,11 @@ import (
 )
 
 type UserUpdate struct {
-	Username  string `gorm:"size:255;not null;unique" form:"username" json:"username"`
-	Password  string `gorm:"size:255;not null;" form:"password" json:"-"`
+	Username  string `gorm:"size:255;not null;unique" form:"username" json:"username" binding:"alphanum,lowercase"`
+	Password  string `gorm:"size:255;not null;" form:"password" json:"-" binding:"min=10"`
 	Firstname string `gorm:"size:255" form:"firstname" json:"firstname"`
 	Lastname  string `gorm:"size:255" form:"lastname" json:"lastname"`
-	Email     string `gorm:"size:255;unique" form:"email" json:"email"`
+	Email     string `gorm:"size:255;unique" form:"email" json:"email" binding:"email"`
 }
 
 // TODO determine if I need FindUserByID function
@@ -97,7 +98,14 @@ func UpdateProfile(c *gin.Context) {
 	// Validate input
 	var input UserUpdate
 	if c.PostForm("newusername") != "" {
-		input.Username = c.PostForm("newusername")
+		if input.Username == strings.ToLower(input.Username) {
+			input.Username = c.PostForm("newusername")
+		} else {
+			c.Redirect(http.StatusFound, "/profile")
+			flashMessage(c, "The new username you entered must be all lowercase.")
+			log.Debugf("Invalid new username entered: %s", input.Username)
+			return
+		}
 	}
 	if c.PostForm("newpassword") != "" {
 		input.Password, _ = hashPassword(c.PostForm("newpassword"))

@@ -37,7 +37,7 @@ DEPLOY_HOSTNAME = $(shell grep DEPLOY_HOSTNAME ./deploy.env | awk -F= '{print $$
 DEPLOY_APPNAME = $(subst .,,$(DEPLOY_HOSTNAME))
 DEPLOY_POSTGRES_PASSWORD = $(shell grep DEPLOY_POSTGRES_PASSWORD ./deploy.env | awk -F= '{print $$2}')
 
-.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install deploy deploy-secrets deploy-only deploy-ip deploy-cert backup get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs docs docs-generate docs-serve clean help
+.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install deploy deploy-secrets deploy-only deploy-ip deploy-cert deploy-psql-console backup get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs docs docs-generate docs-serve clean help
 
 all: vet pre-commit clean test build verify run ## Run default workflow via Docker
 local: local-update-deps local-vendor local-vet pre-commit clean local-test local-cover local-build local-sign local-verify local-run ## Run default workflow using locally installed Golang toolchain
@@ -160,6 +160,12 @@ deploy-secrets: ## Deploy secrets to fly.io
 		fi; \
 	done < $(CURDIR)/app.env
 	flyctl config env
+
+deploy-psql-console: ## Run a PSQL console to the deployed dinnerclub database in fly.io
+	flyctl proxy 5434:5432 -a $(DEPLOY_APPNAME)-db &
+	sleep 5
+	PGPASSWORD=$(DEPLOY_POSTGRES_PASSWORD) psql -h localhost -p 5434 -U $(DEPLOY_APPNAME) $(DEPLOY_APPNAME)
+	pkill -15 -f 'flyctl proxy'
 
 backup: ## Backup dinnerclub database in fly.io to localhost
 	flyctl proxy 5434:5432 -a $(DEPLOY_APPNAME)-db &

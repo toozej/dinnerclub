@@ -12,7 +12,7 @@ func SetupPrivateRoutes() {
 	profile.Use(controllers.EnsureLoggedIn())
 	profile.GET("/", controllers.GetProfile)
 	profile.POST("/update", controllers.UpdateProfile)
-	profile.DELETE("/delete", controllers.DeleteUser)
+	profile.POST("/delete", controllers.DeleteUser)
 
 	postAuth := r.Group("/")
 	postAuth.Use(controllers.EnsureLoggedIn())
