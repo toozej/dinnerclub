@@ -14,23 +14,23 @@
 
 <section>
     <!--Display the title of the entry which is also a link based on its ID-->
-    <h2><a href="/entries/{{ .entry.ID }}">{{ .entry.Name }}</a></h2>
+    <h3><a href="/entries/{{ .entry.ID }}">{{ .entry.Name }}</a></h3>
     <!--Display the content of the entry-->
-    <p>Submitter: {{ .entry.Submitter }}</p>
-    <p>Date: {{ .entry.CreatedAt.Format "Jan 02 2006" }}</p>
-    <p>Visited: {{ .entry.Visited }}</p>
-    <p>Location: {{ .entry.Location }}</p>
-    <p>Cuisine: {{ .entry.Cuisine }}</p>
-    <p>(Optional fields below)</p>
-    <p>Closed: {{ .entry.Closed }}</p>
-    <p>Meal Service: {{ .entry.MealService }}</p>
-    <p>Ordered: {{ .entry.Ordered }}</p>
-    <p>Order Next Time: {{ .entry.OrderNext }}</p>
-    <p>Don't Order Again: {{ .entry.DoNotOrder }}</p>
-    <p>Food Rating: {{ .entry.FoodRating }}</p>
-    <p>Ambience Rating: {{ .entry.AmbienceRating }}</p>
-    <p>Value Rating: {{ .entry.ValueRating }}</p>
-    <p>Comments: {{ .entry.Comments }}</p>
+    Submitter: {{ .entry.Submitter }}<br>
+    Date: {{ .entry.CreatedAt.Format "Jan 02 2006" }}<br>
+    Visited: {{ .entry.Visited }}<br>
+    Location: {{ .entry.Location }}<br>
+    Cuisine: {{ .entry.Cuisine }}<br>
+    (Optional fields below)<br>
+    Closed: {{ .entry.Closed }}<br>
+    Meal Service: {{ .entry.MealService }}<br>
+    Ordered: {{ .entry.Ordered }}<br>
+    Order Next Time: {{ .entry.OrderNext }}<br>
+    Don't Order Again: {{ .entry.DoNotOrder }}<br>
+    Food Rating: {{ .entry.FoodRating }}<br>
+    Ambience Rating: {{ .entry.AmbienceRating }}<br>
+    Value Rating: {{ .entry.ValueRating }}<br>
+    Comments: {{ .entry.Comments }}<br>
 </section>
 
 {{ template "base/footer.html" .}}

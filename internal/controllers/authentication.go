@@ -104,7 +104,7 @@ func LoginPost(c *gin.Context) {
 	// 	},
 	// })
 	flashMessage(c, fmt.Sprintf("User '%s' logged in successfully.", user.Username))
-	redirectPath := "/profile/"
+	redirectPath := "/entries/"
 	c.Redirect(http.StatusFound, redirectPath)
 }
 

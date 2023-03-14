@@ -6,11 +6,11 @@
 {{ range .restaurants }}
 <section>
     <!--Display the name of the restaurant-->
-    <h2><a href="/restaurants/{{ .ID }}">{{ .Name }}</a></h2>
+    <h3><a href="/restaurants/{{ .ID }}">{{ .Name }}</a></h3>
     <!--Display the content of the restaurant-->
-    <p>Location: {{ .Location }}</p>
-    <p>Cuisine: {{ .Cuisine }}</p>
-    <p>Closed: {{ .Closed }}</p>
+    Location: {{ .Location }}<br>
+    Cuisine: {{ .Cuisine }}<br>
+    Closed: {{ .Closed }}<br>
 </section>
 {{end}}
 

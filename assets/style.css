@@ -19,8 +19,9 @@
     position: fixed; /* Set the navbar to fixed position */
     top: 0; /* Position the navbar at the top of the page */
     width: 100%; /* Full width */
+    padding-bottom: 0px; /* No padding at bottom of menu*/
 }
 
 .main {
-  margin-top: 203px; /* Add a top margin to avoid content overlay */
+  margin-top: 12em; /* Add a top margin to avoid content overlay */
 }

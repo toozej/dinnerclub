@@ -6,13 +6,13 @@
 {{ range .entries }}
 <section>
     <!--Display the title of the entry which is also a link based on its ID-->
-    <h2><a href="/entries/{{ .ID }}">{{ .Name }}</a></h2>
+    <h3><a href="/entries/{{ .ID }}">{{ .Name }}</a></h3>
     <!--Display required fields of the entry-->
-    <p>Submitter: {{ .Submitter }}</p>
-    <p>Date: {{ .CreatedAt.Format "Jan 02 2006" }}</p>
-    <p>Visited: {{ .Visited }}</p>
-    <p>Location: {{ .Location }}</p>
-    <p>Cuisine: {{ .Cuisine }}</p>
+    Submitter: {{ .Submitter }}<br>
+    Date: {{ .CreatedAt.Format "Jan 02 2006" }}<br>
+    Visited: {{ .Visited }}<br>
+    Location: {{ .Location }}<br>
+    Cuisine: {{ .Cuisine }}<br>
 </section>
 {{end}}
 

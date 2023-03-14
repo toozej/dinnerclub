@@ -4,12 +4,35 @@
 
 <section>
     <!--Display the name of the restaurant-->
-    <h2><a href="/restaurants/{{ .restaurant.ID }}">{{ .restaurant.Name }}</a></h2>
+    <h3><a href="/restaurants/{{ .restaurant.ID }}">{{ .restaurant.Name }}</a></h3>
     <!--Display the content of the restaurant-->
-    <p>Location: {{ .restaurant.Location }}</p>
-    <p>Cuisine: {{ .restaurant.Cuisine }}</p>
-    <p>Closed: {{ .restaurant.Closed }}</p>
+    Location: {{ .restaurant.Location }}<br>
+    Cuisine: {{ .restaurant.Cuisine }}<br>
+    Closed: {{ .restaurant.Closed }}<br>
 </section>
+
+<section>
+    <h3>Popular Items</h3>
+    <ol>
+    {{ range .popularitems }}
+        <li>{{ .item }}</li>
+    {{ end }}
+    </ol>
+</section>
+
+{{ range .entries }}
+<section>
+    <h3><a href="/entries/{{ .ID }}">{{ .CreatedAt.Format "Jan 02 2006" }}</a></h3>
+    Submitter: {{ .Submitter }}<br>
+    Meal Service: {{ .MealService }}<br>
+    Ordered: {{ .Ordered }}<br>
+    Order Next Time: {{ .OrderNext }}<br>
+    Food Rating: {{ .FoodRating }}<br>
+    Ambience Rating: {{ .AmbienceRating }}<br>
+    Value Rating: {{ .ValueRating }}<br>
+    Comments: {{ .Comments }}<br>
+</section>
+{{end}}
 
 {{ template "base/footer.html" .}}
 {{ end }}

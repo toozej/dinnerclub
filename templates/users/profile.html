@@ -3,13 +3,13 @@
 {{ template "base/header.html" .}}
 {{ template "base/errors.html" . }}
 
-<h2>User Profile</h2>
+<h3>User Profile</h3>
 
 <section>
     <!--Display the content of the user profile-->
-    <p>Username: {{ .user.Username }}</p>
-    <p>Name: {{ .user.Firstname }} {{ .user.Lastname }}</p>
-    <p>User since: {{ .user.CreatedAt.Format "Jan 02 2006" }}</p>
+    Username: {{ .user.Username }}<br>
+    Name: {{ .user.Firstname }} {{ .user.Lastname }}<br>
+    User since: {{ .user.CreatedAt.Format "Jan 02 2006" }}<br>
     <form action="/entries/submittedby/{{ .user.Username }}" method="post">
         <button type="View">My entries</button>
     </form>

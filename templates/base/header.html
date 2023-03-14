@@ -4,7 +4,7 @@
 
   <head>
     <title>Dinner Club</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
 
     <!--Use simplecss to make the application look nice-->
@@ -19,7 +19,7 @@
   <body class="container">
     <header class="menu">
         {{ template "base/menu.html" . }}
-        <h1>{{ .citycode }} Dinner Club</h1>
+        <h2>{{ .citycode }} Dinner Club</h2>
     </header>
 
     <div class="main">
