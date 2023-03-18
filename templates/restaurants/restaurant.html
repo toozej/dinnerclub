@@ -11,14 +11,16 @@
     Closed: {{ .restaurant.Closed }}<br>
 </section>
 
+{{ if .popularitems }}
 <section>
     <h3>Popular Items</h3>
     <ol>
     {{ range .popularitems }}
-        <li>{{ .item }}</li>
+        <li>{{ . }}</li>
     {{ end }}
     </ol>
 </section>
+{{ end }}
 
 {{ range .entries }}
 <section>
@@ -32,7 +34,7 @@
     Value Rating: {{ .ValueRating }}<br>
     Comments: {{ .Comments }}<br>
 </section>
-{{end}}
+{{ end }}
 
 {{ template "base/footer.html" .}}
 {{ end }}

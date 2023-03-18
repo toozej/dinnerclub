@@ -3,11 +3,13 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"github.com/toozej/dinnerclub/internal/models"
 	"github.com/toozej/dinnerclub/pkg/database"
+	"github.com/toozej/dinnerclub/pkg/helpers"
 	"github.com/toozej/dinnerclub/pkg/pagination"
 )
 
@@ -37,6 +39,29 @@ func FindRestaurants(c *gin.Context) {
 		gin.H{"restaurants": restaurants, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c), "p": p})
 }
 
+func getPopularItems(restaurant models.Restaurant) ([]string, error) {
+	var entry models.Entry
+	var rawpopularitems []string
+	if err := database.DB.Model(&entry).Select("Ordered").Where("Name = ? AND Ordered <> '' AND Ordered IS NOT NULL", restaurant.Name).Find(&rawpopularitems).Error; err != nil {
+		return nil, err
+	}
+
+	var popularitems []string
+
+	// remove leading and trailing whitespace on ordered items
+	// then split comma-separated items into the popularitems slice
+	for _, i := range rawpopularitems {
+		trimmeditem := strings.TrimSpace(i)
+		splititem := strings.Split(trimmeditem, ",")
+		popularitems = append(popularitems, splititem...)
+	}
+
+	// sort and then deduplicate popularitems, most to least popular
+	popularitems = helpers.RemoveDuplicates(helpers.SortByFrequency(popularitems))
+
+	return popularitems, nil
+}
+
 // GET /restaurants/:id
 // Find an restaurant
 func FindRestaurant(c *gin.Context) {
@@ -47,56 +72,60 @@ func FindRestaurant(c *gin.Context) {
 		return
 	}
 
+	popularitems, err := getPopularItems(restaurant)
+	if err != nil {
+		flashMessage(c, fmt.Sprintf("Restaurant '%s' doesn't have any popular items yet.", restaurant.Name))
+		return
+	}
+
+	var entries []models.Entry
+	if err := database.DB.Model(&entries).Select("Submitter", "MealService", "FoodRating", "AmbienceRating", "ValueRating", "Comments").Where("Name = ?", restaurant.Name).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		return
+	}
+
 	c.HTML(http.StatusOK, "restaurants/restaurant.html",
-		gin.H{"restaurant": restaurant, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+		gin.H{"restaurant": restaurant, "popularitems": popularitems, "entries": entries, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
 }
 
 // Create new restaurant
 func CreateRestaurantPost(c *gin.Context) {
 	// Validate input
-	restaurant := &models.Restaurant{}
-	// TODO figure out how to make restaurant bind when actually the stuff in c should bind to entry...
-	if err := c.ShouldBind(restaurant); err != nil {
-		verrs := err.(validator.ValidationErrors)
-		messages := make([]string, len(verrs))
-		for i, verr := range verrs {
-			messages[i] = fmt.Sprintf(
-				"%s is required, but was empty.",
-				verr.Field())
-		}
-		c.HTML(http.StatusBadRequest, "entries/new.html",
-			gin.H{"errors": messages, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
-		return
+	closed, _ := strconv.ParseBool(c.PostForm("closed"))
+	restaurant := models.Restaurant{
+		Name:     c.PostForm("name"),
+		Location: c.PostForm("location"),
+		Cuisine:  c.PostForm("cuisine"),
+		Closed:   closed,
 	}
 
-	// if no record with restaurant name already exists, create one. Otherwise error
-	if err := database.DB.Where("name = ?", c.Param("name")).First(&restaurant).Error; err != nil {
+	// if no record with restaurant name already exists, create one
+	if err := database.DB.Model(&restaurant).Where("name = ?", c.Param("name")).Error; err != nil {
 		// create the new restaurant
 		if err := database.DB.Create(&restaurant).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
-
 		// flash a message that the new restaurant entry was saved successfully
 		flashMessage(c, fmt.Sprintf("New restaurant '%s' saved successfully.", restaurant.Name))
-	} else {
-		flashMessage(c, fmt.Sprintf("Restaurant '%s' already exists.", restaurant.Name))
 	}
 }
 
-func DeleteRestaurantPost(c *gin.Context) {
-	// TODO use same validation and ShouldBind() from controllers.CreateEntry()
+// Delete restaurant when no entries reference it
+func DeleteRestaurantPost(c *gin.Context, restaurantName string) {
+	var entry models.Entry
 	var restaurant models.Restaurant
-	if err := database.DB.Where("id = ?", c.Param("id")).First(&restaurant).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
-		return
-	}
+	// if no entries with restaurant exist then delete the restaurant record
+	// (a.k.a. if this call to DeleteRestaurantPost was from deleting the only entry referencing
+	// this restaurant, then delete the restaurant record)
+	// TODO likely need to check deleted_at field is null or something, not working currently
+	if err := database.DB.Model(&entry).Where("name = ?", restaurantName).Error; err != nil {
+		if err := database.DB.Delete(&restaurant).Error; err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
 
-	if err := database.DB.Delete(&restaurant).Error; err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
+		flashMessage(c, fmt.Sprintf("Restaurant '%s' deleted successfully.", restaurant.Name))
+		c.Redirect(http.StatusOK, "/restaurants")
 	}
-
-	flashMessage(c, fmt.Sprintf("Restaurant '%s' deleted successfully.", restaurant.Name))
-	c.Redirect(http.StatusOK, "/restaurants")
 }

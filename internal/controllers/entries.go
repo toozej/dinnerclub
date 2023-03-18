@@ -137,8 +137,7 @@ func CreateEntryPost(c *gin.Context) {
 	}
 
 	// create restaurant using new entry form information
-	// TODO figure out how to get binding to work for two different structs (entry and restaurant)
-	// CreateRestaurantPost(c)
+	CreateRestaurantPost(c)
 
 	// flash a new entry message and redirect to the entry page for the newly created entry
 	flashMessage(c, fmt.Sprintf("New entry '%s' saved successfully.", entry.Name))
@@ -216,6 +215,9 @@ func DeleteEntry(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+
+	// Delete restaurant entry if there's no more entries referencing that restaurant
+	DeleteRestaurantPost(c, entry.Name)
 
 	flashMessage(c, fmt.Sprintf("Entry '%s' deleted successfully.", entry.Name))
 	c.Redirect(http.StatusFound, "/entries")
