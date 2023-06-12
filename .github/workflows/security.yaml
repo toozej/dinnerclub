@@ -7,18 +7,17 @@ on:
     types: [completed]
 
 jobs:
-  # TODO gitleaks commented out until it supports "workflow_run" event
-  #gitleaks:
-  #  name: gitleaks
-  #  runs-on: ubuntu-latest
-  #  if: ${{ github.event.workflow_run.conclusion == 'success' }}
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #      with:
-  #        fetch-depth: 0
-  #    - uses: gitleaks/gitleaks-action@v2
-  #      env:
-  #        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   codeql-analyze:
     name: codeql-analyze
