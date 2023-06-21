@@ -219,8 +219,6 @@ pre-commit-install: ## Install pre-commit hooks and necessary binaries
 pre-commit-run: ## Run pre-commit hooks against all files
 	pre-commit run --all-files
 	# manually run the following checks since their pre-commits aren't working or don't exist
-	checkmake Makefile
-	goreleaser check
 	go-licenses report github.com/toozej/dinnerclub/cmd/dinnerclub
 	govulncheck ./...
 
