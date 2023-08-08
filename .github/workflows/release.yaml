@@ -26,7 +26,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '^1.19'
+          go-version: '^1.21'
           check-latest: true
       - name: Grab Cosign private key
         run: |
@@ -35,27 +35,27 @@ jobs:
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v2 # nosemgrep: yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha
         # https://docs.docker.com/docker-hub/access-tokens/
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v2 # nosemgrep: yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha
         # https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GH_GHCR_TOKEN }}
       - name: Login to Quay Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v2 # nosemgrep: yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha
         # https://github.com/marketplace/actions/push-to-registry#examples
         with:
           registry: quay.io
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_TOKEN }}
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v4 # nosemgrep: yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha
         with:
           distribution: goreleaser
           version: latest
@@ -75,7 +75,7 @@ jobs:
         tag: ['latest', '-arm64', '-amd64']
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@main
+        uses: sigstore/cosign-installer@main # nosemgrep: yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha
       - name: Get public cosign key for dinnerclub project from GitHub
         run: |
           curl --silent https://raw.githubusercontent.com/toozej/dinnerclub/main/dinnerclub.pub -O
@@ -95,7 +95,7 @@ jobs:
         extension: ['', '.exe']
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@main
+        uses: sigstore/cosign-installer@main # nosemgrep: yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha
       - name: Get public cosign key
         run: |
           curl --silent https://raw.githubusercontent.com/toozej/dinnerclub/main/dinnerclub.pub -O
@@ -120,7 +120,7 @@ jobs:
         extension: ['tar.gz', 'zip']
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@main
+        uses: sigstore/cosign-installer@main # nosemgrep: yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha
       - name: Get public cosign key
         run: |
           curl --silent https://raw.githubusercontent.com/toozej/dinnerclub/main/dinnerclub.pub -O
