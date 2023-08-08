@@ -8,6 +8,9 @@ services:
       context: .
     image: toozej/dinnerclub:latest
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
     env_file:
       - "./app.env"
     volumes:
@@ -25,10 +28,14 @@ services:
       - backend
     depends_on:
       - dinnerclub_db
+  # nosemgrep: yaml.docker-compose.security.writable-filesystem-service.writable-filesystem-service
   dinnerclub_db:
     image: postgres:14
     container_name: dinnerclub_db
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
     # TODO remove exposed port, only used for development
     ports:
       - "5432:5432"

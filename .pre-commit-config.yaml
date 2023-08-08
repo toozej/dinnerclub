@@ -98,6 +98,14 @@ repos:
     hooks:
       - id: goreleaser-check
 
+  # run semgrep on all known filetypes
+  - repo: https://github.com/returntocorp/semgrep
+    rev: 'v1.28.0'
+    hooks:
+      - id: semgrep
+        # See https://semgrep.dev/explore to select a ruleset and copy its URL
+        args: ['--config', 'auto', '--error', '--skip-unknown-extensions', '--quiet']
+
   - repo: meta
     hooks:
       - id: check-hooks-apply
