@@ -30,7 +30,7 @@ services:
       - dinnerclub_db
   # nosemgrep: yaml.docker-compose.security.writable-filesystem-service.writable-filesystem-service
   dinnerclub_db:
-    image: postgres:14
+    image: postgres:15
     container_name: dinnerclub_db
     restart: unless-stopped
     security_opt:
