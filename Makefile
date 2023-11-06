@@ -152,14 +152,21 @@ deploy-cert: ## Provision a SSL certificate for deployment in fly.io
 	flyctl certs list
 
 deploy-secrets: ## Deploy secrets to fly.io
-	if test ! -e $(CURDIR)/app.env; then \
-		echo "No app secrets found, need to add them to ./app.env. See README.md for more info"; \
+	@if test -e $(CURDIR)/app.env; then \
+		echo "Trying to load app secrets from app.env file"; \
+		while read -r SECRET; do \
+			if [[ "$${SECRET}" =~ .*SECRET.*|.*PASSWORD.*|.*REFERRAL.* ]]; then \
+				flyctl secrets set --stage $${SECRET}; \
+			fi; \
+		done < $(CURDIR)/app.env
+	else \
+		echo "Trying to load app secrets from environment"; \
+		while read -r SECRET; do \
+			if [[ "$${SECRET}" =~ .*SECRET.*|.*PASSWORD.*|.*REFERRAL.* ]]; then \
+				flyctl secrets set --stage $${SECRET}; \
+			fi; \
+		done < <(env); \
 	fi
-	@while read -r SECRET; do \
-		if [[ "$${SECRET}" =~ .*SECRET.*|.*PASSWORD.*|.*REFERRAL.* ]]; then \
-			flyctl secrets set $${SECRET}; \
-		fi; \
-	done < $(CURDIR)/app.env
 	flyctl config env
 
 deploy-first-time-psql-setup: ## Deploy Postgres database in fly.io
