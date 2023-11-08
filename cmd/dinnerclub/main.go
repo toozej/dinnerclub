@@ -7,6 +7,7 @@ import (
 	"github.com/gocondor/core/sessions"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	_ "go.uber.org/automaxprocs"
 
 	"github.com/toozej/dinnerclub/internal/models"
 	"github.com/toozej/dinnerclub/internal/routers"
