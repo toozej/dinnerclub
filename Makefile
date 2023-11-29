@@ -38,7 +38,7 @@ DEPLOY_APPNAME = $(subst .,,$(DEPLOY_HOSTNAME))
 DEPLOY_REGION = $(shell grep DEPLOY_REGION ./deploy.env | awk -F= '{print $$2}')
 DEPLOY_POSTGRES_PASSWORD = $(shell grep DEPLOY_POSTGRES_PASSWORD ./deploy.env | awk -F= '{print $$2}')
 
-.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install deploy deploy-secrets deploy-only deploy-ip deploy-cert deploy-psql-console deploy-backup deploy-restore get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs update-golang-version docs docs-generate docs-serve clean help
+.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-vendor local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install deploy deploy-secrets deploy-only deploy-ip deploy-cert deploy-psql-console deploy-backup deploy-restore get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs update-golang-version docs docs-generate docs-serve clean help
 
 all: vet pre-commit clean test build verify run ## Run default workflow via Docker
 local: local-update-deps local-vendor local-vet pre-commit clean local-test local-cover local-build local-sign local-verify local-run ## Run default workflow using locally installed Golang toolchain
@@ -95,6 +95,7 @@ local-vet: ## Run `go vet` using locally installed golang toolchain
 	go vet $(CURDIR)/...
 
 local-vendor: ## Run `go mod vendor` using locally installed golang toolchain
+	go mod tidy
 	go mod vendor
 
 local-test: ## Run `go test` using locally installed golang toolchain
@@ -228,7 +229,8 @@ pre-commit-install: ## Install pre-commit hooks and necessary binaries
 	# goreleaser
 	go install github.com/goreleaser/goreleaser@latest
 	# syft
-	go install github.com/anchore/syft/cmd/syft@latest
+	# disabled until https://github.com/golang/go/issues/44840 is resolved or syft no longer uses replace directive in go.mod
+	# go install github.com/anchore/syft/cmd/syft@latest
 	# cosign
 	go install github.com/sigstore/cosign/cmd/cosign@latest
 	# go-licenses
@@ -246,7 +248,7 @@ pre-commit-run: ## Run pre-commit hooks against all files
 	govulncheck ./...
 
 update-golang-version: ## Update to latest Golang version across the repo
-	@VERSION=`curl -s "https://go.dev/dl/?mode=json" | jq -r '.[0].version' | sed 's/go//'`; \
+	@VERSION=`curl -s "https://go.dev/dl/?mode=json" | jq -r '.[0].version' | sed 's/go//' | cut -d '.' -f 1,2`; \
 	echo "Updating Golang to $$VERSION"; \
 	./scripts/update_golang_version.sh $$VERSION
 
