@@ -59,7 +59,8 @@ repos:
       - id: go-sec-mod
       - id: go-staticcheck-mod
       - id: go-critic
-      - id: go-structslop-mod
+      # disabled until https://github.com/orijtech/structslop/pull/63 is merged
+      # - id: go-structslop-mod
       - id: go-fmt
       - id: go-imports
       - id: golangci-lint-mod
@@ -93,7 +94,7 @@ repos:
 
   # run semgrep on all known filetypes
   - repo: https://github.com/returntocorp/semgrep
-    rev: 'v1.52.0'
+    rev: 'v1.60.1'
     hooks:
       - id: semgrep
         # See https://semgrep.dev/explore to select a ruleset and copy its URL
