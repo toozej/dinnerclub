@@ -227,7 +227,7 @@ pre-commit-install: ## Install pre-commit hooks and necessary binaries
 	# checkmake
 	go install github.com/mrtazz/checkmake/cmd/checkmake@latest
 	# goreleaser
-	go install github.com/goreleaser/goreleaser@latest
+	go install github.com/goreleaser/goreleaser/v2@latest
 	# syft
 	command -v syft || curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 	# cosign
