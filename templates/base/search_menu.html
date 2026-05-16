@@ -1,0 +1,22 @@
+<!--search_menu.html-->
+{{ define "base/search_menu.html" }}
+
+<div class="search-menu">
+    <a href="/" class="btn btn-nav">Home</a>
+    <a href="/restaurants" class="btn btn-nav">Restaurants</a>
+{{ if .is_logged_in }}
+    <!--should be shown only during authenticated view -->
+    <a href="/profile" class="btn btn-nav">Profile</a>
+    <form action="/auth/logout" method="post" style="display: inline;">
+        {{ CSRFInput .context }}
+        <button class="btn btn-nav" type="submit">Logout</button>
+    </form>
+    <a href="/entries/new" class="btn btn-add">+</a>
+{{ else }}
+    <!--should be shown for unauthenticated view-->
+    <a href="/auth/register" class="btn btn-nav">Register</a>
+    <a href="/auth/login" class="btn btn-nav">Login</a>
+{{ end }}
+</div>
+
+{{ end }}

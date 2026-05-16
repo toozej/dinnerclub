@@ -1,18 +1,21 @@
+// Package authentication provides authentication and session management functionality
+// for the dinnerclub web application. It handles user login, logout, session management,
+// and JWT token validation.
 package authentication
 
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/gocondor/core/jwt"
-	"github.com/gocondor/core/sessions"
 )
 
-// Auth is authentication management struct
+// Auth is authentication management struct that handles user sessions and JWT tokens.
 type Auth struct {
-	Ses *sessions.Sessions
-	JWT *jwt.JWTUtil
+	Ses         sessions.Store
+	AuthService *AuthService
 }
 
 var auth *Auth
@@ -20,17 +23,17 @@ var auth *Auth
 // user id key
 const USER_ID = "userId"
 
-// New initiates new Auth
-func New(ses *sessions.Sessions, jwt *jwt.JWTUtil) *Auth {
+// New creates and initializes a new Auth instance with the provided session store and auth service.
+func New(sessionStore sessions.Store, authService *AuthService) *Auth {
 	auth = &Auth{
-		ses,
-		jwt,
+		Ses:         sessionStore,
+		AuthService: authService,
 	}
 
 	return auth
 }
 
-// Resolve returns the initiated Auth variable
+// Resolve returns the global Auth instance that was previously initialized.
 func Resolve() *Auth {
 	return auth
 }
@@ -38,17 +41,26 @@ func Resolve() *Auth {
 // Login logs the user in by id
 func (a *Auth) Login(userId uint, c *gin.Context) error {
 	// store the user in the session
-	a.Ses.Set(USER_ID, userId, c)
-
-	return nil
+	session := sessions.Default(c)
+	session.Set(USER_ID, userId)
+	return session.Save()
 }
 
 // UserID returns authenticated user id
 func (a *Auth) UserID(c *gin.Context) (uint, error) {
-	// TODO convert strconv.ParseInt to str.Atoi
-	id, err := strconv.ParseInt(fmt.Sprintf("%v", a.Ses.Get(USER_ID, c)), 10, 32)
+	session := sessions.Default(c)
+	userIDInterface := session.Get(USER_ID)
+	if userIDInterface == nil {
+		return 0, fmt.Errorf("user not logged in")
+	}
+
+	// Convert to uint
+	id, err := strconv.ParseInt(fmt.Sprintf("%v", userIDInterface), 10, 64)
 	if err != nil {
 		return 0, err
+	}
+	if id < 0 {
+		return 0, fmt.Errorf("invalid user ID: negative value")
 	}
 	userID := uint(id)
 
@@ -58,41 +70,62 @@ func (a *Auth) UserID(c *gin.Context) (uint, error) {
 // Logout logs the user out by id
 func (a *Auth) Logout(c *gin.Context) error {
 	// delete the user id from the session
-	a.Ses.Delete(USER_ID, c)
-
-	return nil
+	session := sessions.Default(c)
+	session.Delete(USER_ID)
+	return session.Save()
 }
-
-// TODO figure out what is wrong with this function, and maybe use it in place of Auth.UserID()
-// in authentication controller SetUserStatus()
 
 // Check checks if a user is logged in
 func (a *Auth) Check(c *gin.Context) (bool, error) {
+	session := sessions.Default(c)
+	userIDInterface := session.Get(USER_ID)
+
 	// if session doesn't have user id return false
-	if !a.Ses.Has(USER_ID, c) {
+	if userIDInterface == nil {
 		return false, nil
 	}
 
-	// TODO convert strconv.ParseInt to str.Atoi
-	id, err := strconv.ParseInt(fmt.Sprintf("%v", a.Ses.Get(USER_ID, c)), 10, 32)
+	sessionUserId, err := strconv.ParseInt(fmt.Sprintf("%v", userIDInterface), 10, 64)
 	if err != nil {
 		return false, err
 	}
-	sessionUserId := uint(id)
+	if sessionUserId < 0 {
+		return false, fmt.Errorf("invalid session user ID: negative value")
+	}
 
-	// extract the token
-	token, err := a.JWT.ExtractToken(c)
-	if err != nil {
-		return false, err
+	// extract the token from Authorization header
+	token := a.extractTokenFromHeader(c)
+	if token == "" {
+		// No token provided, rely on session only
+		return sessionUserId > 0, nil
 	}
-	// extract the token's user id
-	tokenUserId, err := a.JWT.DecodeToken(token)
+
+	// validate the token and extract user id
+	claims, err := a.AuthService.ValidateToken(token)
 	if err != nil {
-		return false, err
+		// Token is invalid, rely on session only
+		return sessionUserId > 0, nil
 	}
+
 	// if the session's user id matches the token user id he is authenticated
-	if sessionUserId == tokenUserId {
+	if uint(sessionUserId) == claims.UserID {
 		return true, nil
 	}
+
 	return false, nil
+}
+
+// extractTokenFromHeader extracts JWT token from Authorization header
+func (a *Auth) extractTokenFromHeader(c *gin.Context) string {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return ""
+	}
+
+	// Check if it starts with "Bearer "
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		return strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	return ""
 }

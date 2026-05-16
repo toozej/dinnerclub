@@ -3,6 +3,11 @@
 {{ template "base/header.html" .}}
 {{ template "base/errors.html" . }}
 
+<div class="profile-navigation">
+    <a href="/profile/enhanced" class="btn btn-primary">View Enhanced Profile</a>
+    <a href="/users/{{ .user.Username }}/profile" class="btn btn-secondary">View Public Profile</a>
+</div>
+
 <h3>User Profile</h3>
 
 <section>
@@ -10,14 +15,18 @@
     Username: {{ .user.Username }}<br>
     Name: {{ .user.Firstname }} {{ .user.Lastname }}<br>
     User since: {{ .user.CreatedAt.Format "Jan 02 2006" }}<br>
+    <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
     <form action="/entries/submittedby/{{ .user.Username }}" method="post">
-        <button type="View">My entries</button>
+        {{ CSRFInput .context }}
+        <button type="submit" class="btn btn-primary">View My Entries</button>
     </form>
 </section>
 
 <section>
     <p>Change Profile Information</p>
+    <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
     <form action="/profile/update" method="POST">
+        {{ CSRFInput .context }}
         <label for="newpassword">New Password</label>
         <input type="password" name="newpassword" id="newpassword" minlength="10" autocomplete="new-password">
         <label for="newusername">New Username</label>
@@ -28,16 +37,52 @@
         <input type="text" name="firstname" id="firstname">
         <label for="lastname">Last Name</label>
         <input type="text" name="lastname" id="lastname">
-        <button type="submit">Update</button>
+        <button type="submit" class="btn btn-success btn-form">Update Profile</button>
     </form>
 </section>
 
 <section>
+    <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
     <form action="/profile/delete" method="POST">
+        {{ CSRFInput .context }}
         <label for="delete">Delete your Dinner Club account? This cannot be undone.</label>
-        <button type="submit">Yes, Delete My Account</button>
+        <button type="submit" class="btn btn-danger btn-form" onclick="return confirm('Are you sure you want to delete your account? This cannot be undone.')">Delete My Account</button>
     </form>
 </section>
 
 {{ template "base/footer.html" .}}
 {{ end }}
+
+<style>
+.profile-navigation {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.profile-navigation .btn {
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.profile-navigation .btn-primary {
+    background: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+.profile-navigation .btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: 1px solid #6c757d;
+}
+
+.profile-navigation .btn:hover {
+    opacity: 0.9;
+}
+</style>

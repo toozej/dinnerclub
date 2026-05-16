@@ -1,3 +1,5 @@
+// Package man provides functionality for generating manual pages
+// for the dinnerclub command-line interface.
 package man
 
 import (
@@ -9,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewManCmd creates a new cobra command for generating manual pages.
 func NewManCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                   "man",

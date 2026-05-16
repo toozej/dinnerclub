@@ -17,7 +17,7 @@ before:
     - ./scripts/manpages.sh
 
 snapshot:
-  version_template: '{{ incpatch .Version }}-next'
+  version_template: "{{ incpatch .Version }}-next"
 
 builds:
   - env:
@@ -33,29 +33,37 @@ builds:
       - arm64
     goarm:
       - "7"
-    mod_timestamp: '{{ .CommitTimestamp }}'
+    ignore:
+      - goos: windows
+        goarch: arm
+    mod_timestamp: "{{ .CommitTimestamp }}"
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate
-        }} -X main.builtBy=goreleaser
-    main: ./cmd/dinnerclub/
+      - >-
+        -s -w
+        -X github.com/toozej/dinnerclub/pkg/version.Version={{.Version}}
+        -X github.com/toozej/dinnerclub/pkg/version.Commit={{.Commit}}
+        -X github.com/toozej/dinnerclub/pkg/version.Branch={{.Branch}}
+        -X github.com/toozej/dinnerclub/pkg/version.BuiltAt={{.CommitDate}}
+        -X github.com/toozej/dinnerclub/pkg/version.Builder=goreleaser
+    main: ./
     binary: dinnerclub
 
 universal_binaries:
   - replace: false
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 changelog:
   sort: asc
   use: github
   filters:
     exclude:
-      - '^test:'
-      - '^chore'
-      - 'merge conflict'
+      - "^test:"
+      - "^chore"
+      - "merge conflict"
       - Merge pull request
       - Merge remote-tracking branch
       - Merge branch
@@ -64,155 +72,103 @@ changelog:
     - title: Dependency updates
       regexp: "^.*feat\\(deps\\)*:+.*$"
       order: 300
-    - title: 'New Features'
+    - title: "New Features"
       regexp: "^.*feat[(\\w)]*:+.*$"
       order: 100
-    - title: 'Bug fixes'
+    - title: "Bug fixes"
       regexp: "^.*fix[(\\w)]*:+.*$"
       order: 200
-    - title: 'Documentation updates'
+    - title: "Documentation updates"
       regexp: "^.*docs[(\\w)]*:+.*$"
       order: 400
     - title: Other work
       order: 9999
 
-dockers:
-  - image_templates:
-      - 'toozej/dinnerclub:{{ .Tag }}-amd64'
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-amd64'
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-amd64'
+dockers_v2:
+  - id: dinnerclub
+    images:
+      - 'toozej/dinnerclub'
+      - 'ghcr.io/toozej/dinnerclub'
+      - 'quay.io/toozej/dinnerclub'
+    tags:
+      - '{{ if ne (envOrDefault "GORELEASER_DOCKER_REFRESH" "false") "true" }}v{{ .Version
+        }}{{ end }}'
+      - '{{ if ne (envOrDefault "GORELEASER_DOCKER_REFRESH" "false") "true" }}{{ .Version
+        }}{{ end }}'
+      - "latest"
     dockerfile: Dockerfile.goreleaser
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
-      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
-      - "--label=io.artifacthub.package.license=GPLv3"
-      - "--label=org.opencontainers.image.description=Dinnerclub"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
+    labels:
+      "io.artifacthub.package.readme-url": "https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
+      "io.artifacthub.package.maintainers": "[{\"name\":\"toozej\"}]"
+      "io.artifacthub.package.license": "GPLv3"
+      "org.opencontainers.image.description": "Dinnerclub - Web application to facilitate\
+        \ reviewing and organizing get-togethers at restaurants"
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
+      "org.opencontainers.image.authors": "James Tooze https://github.com/toozej/"
+      "org.opencontainers.image.documentation": "https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
+      "org.opencontainers.image.licenses": "GPL-3.0-only"
+      "org.opencontainers.image.title": "{{.ProjectName}}"
+      "org.opencontainers.image.vendor": "James Tooze"
+    annotations:
+      "index,manifest:org.opencontainers.image.authors": "James Tooze https://github.com/toozej/"
+      "index,manifest:org.opencontainers.image.created": "{{.Date}}"
+      "index,manifest:org.opencontainers.image.description": "Dinnerclub - Web application\
+        \ to facilitate reviewing and organizing get-togethers at restaurants"
+      "index,manifest:org.opencontainers.image.documentation": "https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
+      "index,manifest:org.opencontainers.image.licenses": "GPL-3.0-only"
+      "index,manifest:org.opencontainers.image.revision": "{{.FullCommit}}"
+      "index,manifest:org.opencontainers.image.source": "https://github.com/toozej/dinnerclub"
+      "index,manifest:org.opencontainers.image.title": "{{.ProjectName}}"
+      "index,manifest:org.opencontainers.image.vendor": "James Tooze"
+      "index,manifest:org.opencontainers.image.version": "{{.Version}}"
     extra_files:
       - scripts/goreleaser_entrypoint.sh
-  - image_templates:
-      - 'toozej/dinnerclub:{{ .Tag }}-arm64'
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-arm64'
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-arm64'
-    dockerfile: Dockerfile.goreleaser
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
-      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
-      - "--label=io.artifacthub.package.license=GPLv3"
-      - "--label=org.opencontainers.image.description=Dinnerclub"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-    goarch: arm64
-    extra_files:
-      - scripts/goreleaser_entrypoint.sh
-  - image_templates:
-      - 'toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
+  - id: dinnerclub-distroless
+    images:
+      - 'toozej/dinnerclub'
+      - 'ghcr.io/toozej/dinnerclub'
+      - 'quay.io/toozej/dinnerclub'
+    tags:
+      - '{{ if ne (envOrDefault "GORELEASER_DOCKER_REFRESH" "false") "true" }}v{{ .Version
+        }}-distroless{{ end }}'
+      - '{{ if ne (envOrDefault "GORELEASER_DOCKER_REFRESH" "false") "true" }}{{ .Version
+        }}-distroless{{ end }}'
+      - "distroless"
     dockerfile: Dockerfile.goreleaser.distroless
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
-      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
-      - "--label=io.artifacthub.package.license=GPLv3"
-      - "--label=org.opencontainers.image.description=Dinnerclub"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
+    labels:
+      "io.artifacthub.package.readme-url": "https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
+      "io.artifacthub.package.maintainers": "[{\"name\":\"toozej\"}]"
+      "io.artifacthub.package.license": "GPLv3"
+      "org.opencontainers.image.description": "Dinnerclub - Web application to facilitate\
+        \ reviewing and organizing get-togethers at restaurants"
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
+      "org.opencontainers.image.authors": "James Tooze https://github.com/toozej/"
+      "org.opencontainers.image.documentation": "https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
+      "org.opencontainers.image.licenses": "GPL-3.0-only"
+      "org.opencontainers.image.title": "{{.ProjectName}}"
+      "org.opencontainers.image.vendor": "James Tooze"
+    annotations:
+      "index,manifest:org.opencontainers.image.authors": "James Tooze https://github.com/toozej/"
+      "index,manifest:org.opencontainers.image.created": "{{.Date}}"
+      "index,manifest:org.opencontainers.image.description": "Dinnerclub - Web application\
+        \ to facilitate reviewing and organizing get-togethers at restaurants"
+      "index,manifest:org.opencontainers.image.documentation": "https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
+      "index,manifest:org.opencontainers.image.licenses": "GPL-3.0-only"
+      "index,manifest:org.opencontainers.image.revision": "{{.FullCommit}}"
+      "index,manifest:org.opencontainers.image.source": "https://github.com/toozej/dinnerclub"
+      "index,manifest:org.opencontainers.image.title": "{{.ProjectName}}"
+      "index,manifest:org.opencontainers.image.vendor": "James Tooze"
+      "index,manifest:org.opencontainers.image.version": "{{.Version}}"
     extra_files:
       - scripts/goreleaser_entrypoint.sh
-  - image_templates:
-      - 'toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-    dockerfile: Dockerfile.goreleaser.distroless
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/toozej/dinnerclub/main/README.md"
-      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"toozej\"}]"
-      - "--label=io.artifacthub.package.license=GPLv3"
-      - "--label=org.opencontainers.image.description=Dinnerclub"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-    goarch: arm64
-    extra_files:
-      - scripts/goreleaser_entrypoint.sh
-
-docker_manifests:
-  # tagged
-  - name_template: 'toozej/dinnerclub:{{ .Tag }}'
-    image_templates:
-      - 'toozej/dinnerclub:{{ .Tag }}-amd64'
-      - 'toozej/dinnerclub:{{ .Tag }}-arm64'
-  - name_template: 'ghcr.io/toozej/dinnerclub:{{ .Tag }}'
-    image_templates:
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-amd64'
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-arm64'
-  - name_template: 'quay.io/toozej/dinnerclub:{{ .Tag }}'
-    image_templates:
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-amd64'
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-arm64'
-  - name_template: 'toozej/dinnerclub:{{ .Tag }}-distroless'
-    image_templates:
-      - 'toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
-      - 'toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-  - name_template: 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless'
-    image_templates:
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-  - name_template: 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless'
-    image_templates:
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-  # latest
-  - name_template: 'toozej/dinnerclub:latest'
-    image_templates:
-      - 'toozej/dinnerclub:{{ .Tag }}-amd64'
-      - 'toozej/dinnerclub:{{ .Tag }}-arm64'
-  - name_template: 'ghcr.io/toozej/dinnerclub:latest'
-    image_templates:
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-amd64'
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-arm64'
-  - name_template: 'quay.io/toozej/dinnerclub:latest'
-    image_templates:
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-amd64'
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-arm64'
-  # distroless
-  - name_template: 'toozej/dinnerclub:distroless'
-    image_templates:
-      - 'toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
-      - 'toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-  - name_template: 'ghcr.io/toozej/dinnerclub:distroless'
-    image_templates:
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
-      - 'ghcr.io/toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-  - name_template: 'quay.io/toozej/dinnerclub:distroless'
-    image_templates:
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless-amd64'
-      - 'quay.io/toozej/dinnerclub:{{ .Tag }}-distroless-arm64'
-
 
 archives:
   - name_template: >-
@@ -223,7 +179,7 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ["zip"]
     files:
       - README.md
       - LICENSE
@@ -231,7 +187,7 @@ archives:
       - manpages/*
 
 nfpms:
-  - file_name_template: '{{ .ConventionalFileName }}'
+  - file_name_template: "{{ .ConventionalFileName }}"
     id: packages
     homepage: https://github.com/toozej/dinnerclub
     description: |-
@@ -280,30 +236,30 @@ sboms:
 
 signs:
   - cmd: cosign
-    stdin: '{{ .Env.COSIGN_PASSWORD }}'
     output: true
+    signature: "${artifact}.sigstore.json"
     args:
       - 'sign-blob'
-      - '--key=env://COSIGN_PRIVATE_KEY'
-      - '--yes'
-      - '--output-signature=${signature}'
+      - '--bundle=${signature}'
       - '${artifact}'
+      - '--yes'
     artifacts: all
 
 docker_signs:
   - cmd: cosign
     artifacts: all
-    stdin: '{{ .Env.COSIGN_PASSWORD }}'
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
     output: true
     args:
-      - 'sign'
-      - '--key=env://COSIGN_PRIVATE_KEY'
-      - '--yes'
-      - '${artifact}'
+      - "sign"
+      - "--key=env://COSIGN_PRIVATE_KEY"
+      - "--yes"
+      - "${artifact}"
 
 milestones:
   - close: true
 
 release:
+  disable: '{{ eq (envOrDefault "GORELEASER_DOCKER_REFRESH" "false") "true" }}'
   footer: |
     **Full Changelog**: https://github.com/toozej/dinnerclub/compare/{{ .PreviousTag }}...{{ .Tag }}

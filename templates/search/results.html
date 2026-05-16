@@ -1,0 +1,29 @@
+{{ define "search/results.html" }}
+<div id="searchResults" class="search-results-container">
+  <div class="search-info">
+    <h3>Search Results for: "{{ .query }}"</h3>
+    <p class="result-count">Found {{ add (len .entries) (len .restaurants) }} total results</p>
+  </div>
+
+  {{ if or .entries .restaurants }}
+    {{ if .entries }}
+      {{ template "search/entry_results.html" . }}
+    {{ end }}
+    
+    {{ if .restaurants }}
+      {{ template "search/restaurant_results.html" . }}
+    {{ end }}
+  {{ else }}
+    <div class="no-results">
+      <h3>No results found</h3>
+      <p>Try adjusting your search terms or check for typos.</p>
+      <p><strong>Search tips:</strong></p>
+      <ul>
+        <li>Use "wishlist" to find places you want to visit</li>
+        <li>Use "author:username" to find entries by a specific user</li>
+        <li>Search by cuisine type or location</li>
+      </ul>
+    </div>
+  {{ end }}
+</div>
+{{ end }}

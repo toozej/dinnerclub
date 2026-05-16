@@ -1,15 +1,20 @@
 package controllers
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
-	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/toozej/dinnerclub/internal/models"
+	"github.com/toozej/dinnerclub/internal/services"
+	"github.com/toozej/dinnerclub/internal/validation"
 	"github.com/toozej/dinnerclub/pkg/authentication"
 	"github.com/toozej/dinnerclub/pkg/database"
+	"gorm.io/gorm"
 )
 
 type UserUpdate struct {
@@ -20,99 +25,143 @@ type UserUpdate struct {
 	Email     string `gorm:"size:255;unique" form:"email" json:"email" binding:"email"`
 }
 
-// TODO determine if I need FindUserByID function
 // GET /users/:id
-// Find a user
-func FindUserByID(c *gin.Context) {
+// Get a user by ID with timeout support
+func GetUserByID(c *gin.Context) {
+	// Create timeout context for database operations
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+	defer cancel()
+
 	var user models.User
 
-	if err := database.DB.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+	if err := database.WithContext(ctx).Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			Response.NotFound(c, "User")
+		} else {
+			Response.DatabaseError(c, "find", err)
+		}
 		return
 	}
 
-	// TODO handle HTML and JSON returns here
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	Response.Success(c, user, "")
 }
 
-// TODO determine if I need FindUserByUsername function
 // GET /users/:username
-// Find a user by username
-func FindUserByUsername(c *gin.Context) {
+// Get a user by username
+func GetUserByUsername(c *gin.Context) {
 	var user models.User
 
 	if err := database.DB.Where("username = ?", c.Param("username")).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		Response.NotFound(c, "User")
 		return
 	}
 
-	// TODO handle HTML and JSON returns here
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	Response.Success(c, user, "")
 }
 
-// DELETE /profile/delete
-// Delete a user
-func DeleteUser(c *gin.Context) {
-	Auth := authentication.Resolve()
-	userID, _ := Auth.UserID(c)
-	var user models.User
-	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+// POST /profile/delete
+// Delete a user with timeout support
+func PostProfileDelete(c *gin.Context) {
+	// Create timeout context for database operations
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	userID, exists := authentication.GetUserID(c)
+	if !exists {
+		Response.Unauthorized(c, "User not authenticated")
 		return
 	}
 
-	database.DB.Delete(&user)
-	flashMessage(c, fmt.Sprintf("User '%s' deleted successfully.", user.Username))
+	var user models.User
+	if err := database.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
+		Response.NotFound(c, "User")
+		return
+	}
 
-	// force the user to logout such that they can no longer post new entries, etc.
-	Logout(c)
+	if err := database.WithContext(ctx).Delete(&user).Error; err != nil {
+		Response.DatabaseError(c, "delete", err)
+		return
+	}
+
+	// Invalidate user cache
+	if services.UserCache != nil {
+		services.UserCache.InvalidateUser(user.Username)
+	}
+
+	// Handle response based on request type
+	if Response.IsHTMLRequest(c) {
+		flashMessage(c, fmt.Sprintf("User '%s' deleted successfully.", user.Username))
+		// Force the user to logout such that they can no longer post new entries, etc.
+		PostLogout(c)
+	} else {
+		Response.Success(c, nil, fmt.Sprintf("User '%s' deleted successfully", user.Username))
+	}
 }
 
 // GET /profile
 // Get currently logged in user's profile
 func GetProfile(c *gin.Context) {
-	Auth := authentication.Resolve()
-	userID, _ := Auth.UserID(c)
-	var user models.User
-
-	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+	userID, exists := authentication.GetUserID(c)
+	if !exists {
+		Response.Unauthorized(c, "User not authenticated")
 		return
 	}
+
+	var user models.User
+	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		Response.NotFound(c, "User")
+		return
+	}
+
 	c.HTML(http.StatusOK, "users/profile.html",
-		gin.H{"user": user, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": flashes(c)})
+		gin.H{"user": user, "is_logged_in": c.MustGet("is_logged_in").(bool), "citycode": c.MustGet("citycode").(string), "messages": Flashes(c), "context": c})
 }
 
 // POST /profile/update
 // Update user profile
-func UpdateProfile(c *gin.Context) {
-	Auth := authentication.Resolve()
-	userID, _ := Auth.UserID(c)
-	// Get model if exist
-	var user models.User
-	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+func PostProfileUpdate(c *gin.Context) {
+	userID, exists := authentication.GetUserID(c)
+	if !exists {
+		Response.Unauthorized(c, "User not authenticated")
 		return
 	}
 
-	// Validate input
+	// Get model if exist
+	var user models.User
+	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		Response.NotFound(c, "User")
+		return
+	}
+
+	// Get form data
+	newUsername := c.PostForm("newusername")
+	newPassword := c.PostForm("newpassword")
+
+	// Bind other form data
 	var input UserUpdate
-	if c.PostForm("newusername") != "" {
-		if input.Username == strings.ToLower(input.Username) {
-			input.Username = c.PostForm("newusername")
-		} else {
-			c.Redirect(http.StatusFound, "/profile")
-			flashMessage(c, "The new username you entered must be all lowercase.")
-			log.Debugf("Invalid new username entered: %s", input.Username)
+	if err := c.ShouldBind(&input); err != nil {
+		Response.BadRequest(c, "Invalid form data", err)
+		return
+	}
+
+	// Validate the update data using the new validation helper
+	validationResult := validation.ValidationHelperInstance.ValidateUserUpdate(newUsername, newPassword, input.Email)
+	if !validationResult.IsValid {
+		validation.ValidationHelperInstance.HandleValidationErrors(c, validationResult, "Please check all required fields")
+		return
+	}
+
+	// Process validated data
+	if newUsername != "" {
+		input.Username = newUsername
+	}
+	if newPassword != "" {
+		hashedPassword, err := hashPassword(newPassword)
+		if err != nil {
+			Response.InternalError(c, "Password processing failed", err)
 			return
 		}
-	}
-	if c.PostForm("newpassword") != "" {
-		input.Password, _ = hashPassword(c.PostForm("newpassword"))
-	}
-	if err := c.ShouldBind(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		input.Password = hashedPassword
 	}
 
 	// map UserUpdate input struct fields to models.User struct
@@ -125,21 +174,32 @@ func UpdateProfile(c *gin.Context) {
 	}
 
 	if err := database.DB.Model(&user).Updates(&updateUser).Error; err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		Response.DatabaseError(c, "update", err)
 		return
 	}
 
-	// flash an update profile message and redirect to the profile page
-	flashMessage(c, "Profile updated successfully.")
-	c.Redirect(http.StatusFound, "/profile")
+	// Handle response based on request type
+	if Response.IsHTMLRequest(c) {
+		Response.RedirectWithMessage(c, "/profile", "Profile updated successfully.")
+	} else {
+		Response.Success(c, gin.H{"username": user.Username}, "Profile updated successfully")
+	}
 }
 
 func GetCurrentUsername(c *gin.Context) string {
-	Auth := authentication.Resolve()
-	userID, _ := Auth.UserID(c)
+	// First try to get username directly from JWT context
+	if username, exists := authentication.GetUsername(c); exists && username != "" {
+		return username
+	}
+
+	// Fallback to database lookup if username not in context
+	userID, exists := authentication.GetUserID(c)
+	if !exists {
+		log.Info("No authenticated user found")
+		return ""
+	}
 
 	var user models.User
-
 	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
 		log.Infof("No username found matching currently logged in UserID %d", userID)
 		return ""

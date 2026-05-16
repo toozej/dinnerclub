@@ -1,3 +1,5 @@
+// Package helpers provides utility functions for common operations
+// throughout the dinnerclub application.
 package helpers
 
 import (
@@ -5,17 +7,20 @@ import (
 
 	// "github.com/gin-gonic/gin"
 	"github.com/toozej/dinnerclub/internal/models"
+	"github.com/toozej/dinnerclub/pkg/database"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	// "net/http"
 	// "net/http/httptest"
 )
 
+// testable defines the interface for testing objects that can be used with helper functions.
 type testable interface {
 	Helper()
 	Fatalf(format string, args ...any)
 }
 
+// FreshDb creates a fresh SQLite database for testing purposes.
 func FreshDb(t testable, path ...string) *gorm.DB {
 	t.Helper()
 
@@ -35,7 +40,17 @@ func FreshDb(t testable, path ...string) *gorm.DB {
 	if err != nil {
 		t.Fatalf("Error opening memory db: %s", err)
 	}
+
+	// Store original database and set the new one for migration
+	originalDB := database.DB
+	database.DB = db
+
+	// Migrate schema
 	models.MigrateSchema()
+
+	// Restore original database
+	database.DB = originalDB
+
 	return db
 }
 

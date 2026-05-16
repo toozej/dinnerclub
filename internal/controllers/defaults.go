@@ -3,12 +3,12 @@ package controllers
 import (
 	"strings"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
+	"github.com/toozej/dinnerclub/pkg/session"
 )
 
-// sets default gin context variables used across the entire site
+// SetDefaults creates middleware that sets default Gin context variables
+// used across the entire site including city code and referral code.
 func SetDefaults(cityCode string, referralCode string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("citycode", strings.ToUpper(cityCode))
@@ -16,21 +16,13 @@ func SetDefaults(cityCode string, referralCode string) gin.HandlerFunc {
 	}
 }
 
+// flashMessage adds a flash message to the session for display on the next request.
 func flashMessage(c *gin.Context, message string) {
-	session := sessions.Default(c)
-	session.AddFlash(message)
-	if err := session.Save(); err != nil {
-		log.Printf("error in flashMessage saving session: %s", err)
-	}
+	session.FlashMessage(c, message)
 }
 
-func flashes(c *gin.Context) []interface{} {
-	session := sessions.Default(c)
-	flashes := session.Flashes()
-	if len(flashes) != 0 {
-		if err := session.Save(); err != nil {
-			log.Printf("error in flashes saving session: %s", err)
-		}
-	}
-	return flashes
+// Flashes retrieves flash messages from the session for display in templates
+// and clears them after retrieval to prevent duplicate display.
+func Flashes(c *gin.Context) []any {
+	return session.GetFlashes(c)
 }

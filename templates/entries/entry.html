@@ -2,36 +2,218 @@
 {{ define "entries/entry.html" }}
 {{ template "base/header.html" .}}
 
+<style>
+.entry-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.entry-section h4 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.entry-field {
+    margin-bottom: 10px;
+}
+
+.entry-field strong {
+    display: inline-block;
+    width: 150px;
+    color: #555;
+}
+
+
+
+.rating-display {
+    color: #666;
+    font-style: italic;
+}
+
+.action-buttons {
+    margin-bottom: 20px;
+}
+
+.action-buttons form {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+.prominent-section {
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+    margin-bottom: 25px;
+}
+
+.prominent-section h4 {
+    color: #007bff;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.prominent-field {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.4;
+    margin-bottom: 0;
+}
+
+.user-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.user-link:hover {
+    text-decoration: underline;
+    color: #0056b3;
+}
+</style>
+
 {{ if .is_mine }}
-    <!--should be shown only during authenticated view of your own entries-->
-    <form action="/entries/{{ .entry.ID }}/update" method="GET">
-        <button type="submit">Update Entry</button>
-    </form>
-    <form action="/entries/{{ .entry.ID }}/delete" method="POST">
-        <button type="submit">Delete Entry</button>
-    </form>
+    <div class="action-buttons">
+        <form action="/entries/{{ .entry.ID }}/update" method="GET">
+            <button type="submit" class="btn btn-primary">Update Entry</button>
+        </form>
+        <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+        <form action="/entries/{{ .entry.ID }}/delete" method="POST">
+            {{ CSRFInput .context }}
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this entry?')">Delete Entry</button>
+        </form>
+    </div>
 {{ end }}
 
-<section>
-    <!--Display the title of the entry which is also a link based on its ID-->
-    <h3><a href="/entries/{{ .entry.ID }}">{{ .entry.Name }}</a></h3>
-    <!--Display the content of the entry-->
-    Submitter: {{ .entry.Submitter }}<br>
-    Date: {{ .entry.CreatedAt.Format "Jan 02 2006" }}<br>
-    Visited: {{ .entry.Visited }}<br>
-    Location: {{ .entry.Location }}<br>
-    Cuisine: {{ .entry.Cuisine }}<br>
-    (Optional fields below)<br>
-    Closed: {{ .entry.Closed }}<br>
-    Meal Service: {{ .entry.MealService }}<br>
-    Ordered: {{ .entry.Ordered }}<br>
-    Order Next Time: {{ .entry.OrderNext }}<br>
-    Don't Order Again: {{ .entry.DoNotOrder }}<br>
-    Food Rating: {{ .entry.FoodRating }}<br>
-    Ambience Rating: {{ .entry.AmbienceRating }}<br>
-    Value Rating: {{ .entry.ValueRating }}<br>
-    Comments: {{ .entry.Comments }}<br>
-</section>
+<div class="entry-section">
+    <h3>{{ .entry.Name }}</h3>
+    
+    <div class="entry-field">
+        <strong>Submitter:</strong> 
+        {{ SafeHTML (UserProfileLink .entry.Submitter) }}
+    </div>
+    
+    <div class="entry-field">
+        <strong>Date:</strong> {{ .entry.CreatedAt.Format "Jan 02 2006" }}
+    </div>
+    
+    <div class="entry-field">
+        <strong>Visited:</strong> {{ FormatBoolean .entry.Visited }}
+    </div>
+    
+    <div class="entry-field">
+        <strong>Cuisine:</strong> {{ .entry.Cuisine }}
+    </div>
+    
+    <div class="entry-field">
+        <strong>Location:</strong> {{ .entry.Location }}
+    </div>
+</div>
+
+{{ if not .entry.Visited }}
+<div class="entry-section">
+    <h4>Looking Forward To</h4>
+    <div class="entry-field">
+        <strong>Expectations:</strong> {{ .entry.LookingForwardTo }}
+    </div>
+</div>
+{{ end }}
+
+{{ if .entry.Visited }}
+{{ if .entry.Ordered }}
+<div class="entry-section prominent-section">
+    <h4>Items Ordered</h4>
+    <div class="entry-field prominent-field">
+        {{ .entry.Ordered }}
+    </div>
+</div>
+{{ end }}
+
+{{ if .entry.OrderNext }}
+<div class="entry-section prominent-section">
+    <h4>Order Next Time</h4>
+    <div class="entry-field prominent-field">
+        {{ .entry.OrderNext }}
+    </div>
+</div>
+{{ end }}
+
+{{ if .entry.DoNotOrder }}
+<div class="entry-section">
+    <h4>Don't Order Again</h4>
+    <div class="entry-field">
+        {{ .entry.DoNotOrder }}
+    </div>
+</div>
+{{ end }}
+
+{{ if .entry.MealService }}
+<div class="entry-section">
+    <h4>Visit Details</h4>
+    <div class="entry-field">
+        <strong>Meal Service:</strong> {{ .entry.MealService }}
+    </div>
+</div>
+{{ end }}
+
+<div class="entry-section">
+    <h4>Ratings</h4>
+    
+    <div class="entry-field">
+        <strong>Food Rating:</strong> {{ FormatRating .entry.FoodRating }}
+    </div>
+    
+    <div class="entry-field">
+        <strong>Ambience Rating:</strong> {{ FormatRating .entry.AmbienceRating }}
+    </div>
+    
+    <div class="entry-field">
+        <strong>Value Rating:</strong> {{ FormatRating .entry.ValueRating }}
+    </div>
+</div>
+{{ end }}
+
+{{ if .entry.Comments }}
+<div class="entry-section">
+    <h4>Comments</h4>
+    <div class="entry-field">
+        {{ .entry.Comments }}
+    </div>
+</div>
+{{ end }}
+
+<div class="entry-section">
+    <h4>Restaurant Status</h4>
+    <div class="entry-field">
+        <strong>Closed:</strong> {{ FormatBoolean .entry.Closed }}
+    </div>
+</div>
 
 {{ template "base/footer.html" .}}
 {{ end }}

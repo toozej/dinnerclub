@@ -1,0 +1,57 @@
+---
+services:
+  dinnerclub_app:
+    container_name: dinnerclub_app
+    build:
+      dockerfile: Dockerfile.distroless
+      context: .
+    image: toozej/dinnerclub:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    env_file:
+      - "./app.env"
+    volumes:
+      - "./app.env:/app.env"
+    ports:
+      - "8080:8080"
+    labels:
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.dinnerclub.rule=Host(`dinnerclub.test`)"
+      - "traefik.http.routers.dinnerclub.middlewares=http-redirect-https@file,headers@file"
+      - "traefik.http.routers.dinnerclub-secure.entrypoints=https"
+      - "traefik.http.routers.dinnerclub-secure.rule=Host(`dinnerclub.test`)"
+      - "traefik.http.routers.dinnerclub-secure.middlewares=headers@file"
+      - "traefik.http.routers.dinnerclub-secure.tls=true"
+    networks:
+      #- traefik
+      - backend
+    depends_on:
+      - dinnerclub_db
+  # nosemgrep: yaml.docker-compose.security.writable-filesystem-service.writable-filesystem-service
+  dinnerclub_db:
+    image: postgres:17
+    container_name: dinnerclub_db
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    ports:
+      - "5432:5432"
+    env_file:
+      - "./db.env"
+    volumes:
+      - "dinnerclub_db:/var/lib/postgresql/data"
+    # labels:
+    #   - "traefik.enable=false"
+    networks:
+      - backend
+volumes:
+  dinnerclub_db:
+networks:
+  # traefik:
+  #   name: traefik
+  #   external: true
+  backend:
+    driver: bridge

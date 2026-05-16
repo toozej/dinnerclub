@@ -2,39 +2,479 @@
 {{ define "restaurants/restaurant.html" }}
 {{ template "base/header.html" .}}
 
-<section>
-    <!--Display the name of the restaurant-->
-    <h3><a href="/restaurants/{{ .restaurant.ID }}">{{ .restaurant.Name }}</a></h3>
-    <!--Display the content of the restaurant-->
-    Location: {{ .restaurant.Location }}<br>
-    Cuisine: {{ .restaurant.Cuisine }}<br>
-    Closed: {{ .restaurant.Closed }}<br>
-</section>
+<style>
+.restaurant-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
 
-{{ if .popularitems }}
-<section>
-    <h3>Popular Items</h3>
-    <ol>
-    {{ range .popularitems }}
-        <li>{{ . }}</li>
+.restaurant-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.restaurant-section.static-info {
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+}
+
+.restaurant-section.popular-section {
+    background-color: #fff8e1;
+    border-left: 4px solid #ffc107;
+}
+
+.restaurant-section.entries-section {
+    background-color: #f1f8e9;
+    border-left: 4px solid #28a745;
+}
+
+.restaurant-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    font-size: 1.8em;
+}
+
+.restaurant-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    font-size: 1.4em;
+}
+
+.restaurant-section h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #555;
+    font-size: 1.2em;
+}
+
+.restaurant-field {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.restaurant-field strong {
+    display: inline-block;
+    width: 140px;
+    color: #555;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.restaurant-field .value {
+    flex: 1;
+}
+
+.user-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.user-link:hover {
+    text-decoration: underline;
+}
+
+.entry-link {
+    color: #28a745;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.entry-link:hover {
+    text-decoration: underline;
+}
+
+.popular-items {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 20px;
+}
+
+.popular-items ol {
+    margin: 0;
+    padding-left: 25px;
+}
+
+.popular-items li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.frequency-badge {
+    background-color: #6c757d;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    margin-left: 8px;
+}
+
+.ratings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.rating-item {
+    background-color: #fff;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.rating-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.rating-label {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.entry-summary {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-left: 4px solid #007bff;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+}
+
+.entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.entry-date {
+    font-weight: 600;
+    color: #333;
+}
+
+.entry-status {
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.entry-status.visited {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.entry-status.wishlist {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.entry-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.entry-ratings {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.rating-badge {
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    border: 1px solid #dee2e6;
+}
+
+.no-entries {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.no-entries h4 {
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+    .restaurant-page {
+        padding: 10px;
+    }
+    
+    .restaurant-field {
+        flex-direction: column;
+    }
+    
+    .restaurant-field strong {
+        width: auto;
+        margin-bottom: 4px;
+    }
+    
+    .entry-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .entry-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+</style>
+
+<div class="restaurant-page">
+
+    <!-- Section 1: Restaurant Static Information -->
+    <div class="restaurant-section static-info">
+        <h2>{{ .restaurant.Name }}</h2>
+        
+        <div class="restaurant-field">
+            <strong>Cuisine:</strong>
+            <span class="value">{{ .restaurant.Cuisine }}</span>
+        </div>
+        
+        <div class="restaurant-field">
+            <strong>Location:</strong>
+            <span class="value">{{ .restaurant.Location }}</span>
+        </div>
+        
+        <div class="restaurant-field">
+            <strong>Status:</strong>
+            <span class="value">{{ if .restaurant.Closed }}Closed{{ else }}Open{{ end }}</span>
+        </div>
+        
+        {{ if .restaurant.Address }}
+        <div class="restaurant-field">
+            <strong>Address:</strong>
+            <span class="value">{{ .restaurant.Address }}</span>
+        </div>
+        {{ end }}
+        
+        {{ if .restaurant.PhoneNumber }}
+        <div class="restaurant-field">
+            <strong>Phone:</strong>
+            <span class="value">{{ .restaurant.PhoneNumber }}</span>
+        </div>
+        {{ end }}
+        
+        {{ if .restaurant.WebsiteURL }}
+        <div class="restaurant-field">
+            <strong>Website:</strong>
+            <span class="value"><a href="{{ .restaurant.WebsiteURL }}" target="_blank" rel="noopener">{{ .restaurant.WebsiteURL }}</a></span>
+        </div>
+        {{ end }}
+        
+        {{ if .restaurant.MenuURL }}
+        <div class="restaurant-field">
+            <strong>Menu:</strong>
+            <span class="value"><a href="{{ .restaurant.MenuURL }}" target="_blank" rel="noopener">View Menu</a></span>
+        </div>
+        {{ end }}
+        
+        {{ if .restaurant.ReservationsURL }}
+        <div class="restaurant-field">
+            <strong>Reservations:</strong>
+            <span class="value"><a href="{{ .restaurant.ReservationsURL }}" target="_blank" rel="noopener">Make Reservation</a></span>
+        </div>
+        {{ end }}
+        
+        {{ if .restaurantData }}
+        <div class="restaurant-field">
+            <strong>Total Entries:</strong>
+            <span class="value">{{ .restaurantData.EntryCount }}</span>
+        </div>
+        {{ end }}
+    </div>
+
+    <!-- Section 2: Popular Items and Average Ratings -->
+    {{ if .restaurantData }}
+    <div class="restaurant-section popular-section">
+        <h3>Popular Items & Ratings</h3>
+        
+        {{ if .restaurantData.PopularItems }}
+        <div class="popular-items">
+            <h4>Most Popular Items:</h4>
+            <ol>
+            {{ range .restaurantData.PopularItems }}
+                <li>
+                    {{ .Name }}
+                    <span class="frequency-badge">{{ .Frequency }}x</span>
+                </li>
+            {{ end }}
+            </ol>
+        </div>
+        {{ else }}
+        <div class="popular-items">
+            <h4>Popular Items:</h4>
+            <p style="color: #6c757d; font-style: italic;">No items have been ordered yet.</p>
+        </div>
+        {{ end }}
+        
+        {{ if or (ne .restaurantData.AverageRatings.Food 0.0) (ne .restaurantData.AverageRatings.Ambience 0.0) (ne .restaurantData.AverageRatings.Value 0.0) }}
+        <h4>Average Ratings:</h4>
+        <div class="ratings-grid">
+            {{ if ne .restaurantData.AverageRatings.Food 0.0 }}
+            <div class="rating-item">
+                <div class="rating-value">{{ printf "%.1f" .restaurantData.AverageRatings.Food }}</div>
+                <div class="rating-label">Food</div>
+            </div>
+            {{ end }}
+            {{ if ne .restaurantData.AverageRatings.Ambience 0.0 }}
+            <div class="rating-item">
+                <div class="rating-value">{{ printf "%.1f" .restaurantData.AverageRatings.Ambience }}</div>
+                <div class="rating-label">Ambience</div>
+            </div>
+            {{ end }}
+            {{ if ne .restaurantData.AverageRatings.Value 0.0 }}
+            <div class="rating-item">
+                <div class="rating-value">{{ printf "%.1f" .restaurantData.AverageRatings.Value }}</div>
+                <div class="rating-label">Value</div>
+            </div>
+            {{ end }}
+        </div>
+        {{ else }}
+        <h4>Average Ratings:</h4>
+        <p style="color: #6c757d; font-style: italic;">No ratings available yet.</p>
+        {{ end }}
+    </div>
+    {{ else if .popularitems }}
+    <!-- Fallback for old controller method -->
+    <div class="restaurant-section popular-section">
+        <h3>Popular Items</h3>
+        <div class="popular-items">
+            <ol>
+            {{ range .popularitems }}
+                <li>{{ . }}</li>
+            {{ end }}
+            </ol>
+        </div>
+    </div>
     {{ end }}
-    </ol>
-</section>
-{{ end }}
 
-{{ range .entries }}
-<section>
-    <h3><a href="/entries/{{ .ID }}">{{ .CreatedAt.Format "Jan 02 2006" }}</a></h3>
-    Submitter: {{ .Submitter }}<br>
-    Meal Service: {{ .MealService }}<br>
-    Ordered: {{ .Ordered }}<br>
-    Order Next Time: {{ .OrderNext }}<br>
-    Food Rating: {{ .FoodRating }}<br>
-    Ambience Rating: {{ .AmbienceRating }}<br>
-    Value Rating: {{ .ValueRating }}<br>
-    Comments: {{ .Comments }}<br>
-</section>
-{{ end }}
+    <!-- Section 3: Recent Entries -->
+    {{ if .entries }}
+    <div class="restaurant-section entries-section">
+        <h3>Recent Entries</h3>
+        
+        {{ range .entries }}
+        <div class="entry-summary">
+            <div class="entry-header">
+                <div class="entry-date">
+                    <a href="/entries/{{ .ID }}" class="entry-link">{{ .CreatedAt.Format "Jan 02, 2006" }}</a>
+                </div>
+                <div class="entry-status {{ if .Visited }}visited{{ else }}wishlist{{ end }}">
+                    {{ if .Visited }}Visited{{ else }}Wishlist{{ end }}
+                </div>
+            </div>
+            
+            <div class="entry-content">
+                <div class="entry-left">
+                    <div class="restaurant-field">
+                        <strong>Submitter:</strong>
+                        <span class="value">
+                            <a href="/entries/submittedby/{{ .Submitter }}" class="user-link">{{ .Submitter }}</a>
+                        </span>
+                    </div>
+                    
+                    {{ if .MealService }}
+                    <div class="restaurant-field">
+                        <strong>Meal Service:</strong>
+                        <span class="value">{{ .MealService }}</span>
+                    </div>
+                    {{ end }}
+                    
+                    {{ if .Ordered }}
+                    <div class="restaurant-field">
+                        <strong>Ordered:</strong>
+                        <span class="value">{{ .Ordered }}</span>
+                    </div>
+                    {{ end }}
+                    
+                    {{ if .OrderNext }}
+                    <div class="restaurant-field">
+                        <strong>Order Next:</strong>
+                        <span class="value">{{ .OrderNext }}</span>
+                    </div>
+                    {{ end }}
+                    
+                    {{ if .DoNotOrder }}
+                    <div class="restaurant-field">
+                        <strong>Don't Order:</strong>
+                        <span class="value">{{ .DoNotOrder }}</span>
+                    </div>
+                    {{ end }}
+                    
+                    {{ if .LookingForwardTo }}
+                    <div class="restaurant-field">
+                        <strong>Looking Forward To:</strong>
+                        <span class="value">{{ .LookingForwardTo }}</span>
+                    </div>
+                    {{ end }}
+                </div>
+                
+                <div class="entry-right">
+                    <div class="entry-ratings">
+                        {{ if ne .FoodRating 0 }}
+                        <div class="rating-badge">Food: {{ .FoodRating }}/5</div>
+                        {{ end }}
+                        {{ if ne .AmbienceRating 0 }}
+                        <div class="rating-badge">Ambience: {{ .AmbienceRating }}/5</div>
+                        {{ end }}
+                        {{ if ne .ValueRating 0 }}
+                        <div class="rating-badge">Value: {{ .ValueRating }}/5</div>
+                        {{ end }}
+                        {{ if and (eq .FoodRating 0) (eq .AmbienceRating 0) (eq .ValueRating 0) }}
+                        <div class="rating-badge">Not Rated</div>
+                        {{ end }}
+                    </div>
+                    
+                    {{ if .Comments }}
+                    <div class="restaurant-field" style="margin-top: 10px;">
+                        <strong>Comments:</strong>
+                        <span class="value">{{ .Comments }}</span>
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+        {{ end }}
+    </div>
+    {{ else }}
+    <div class="restaurant-section entries-section">
+        <div class="no-entries">
+            <h4>No Entries Yet</h4>
+            <p>No one has reviewed this restaurant yet. Be the first to add an entry!</p>
+        </div>
+    </div>
+    {{ end }}
+
+</div>
 
 {{ template "base/footer.html" .}}
 {{ end }}

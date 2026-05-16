@@ -1,3 +1,5 @@
+// Package pagination provides utilities for handling paginated data
+// in the dinnerclub web application.
 package pagination
 
 import (
@@ -6,6 +8,7 @@ import (
 	"strconv"
 )
 
+// Pagination holds pagination information for displaying paginated results.
 type Pagination struct {
 	Page   int
 	Count  int
@@ -22,6 +25,7 @@ func (p *Pagination) Pages() []int {
 	return pages
 }
 
+// Paginate creates a new Pagination instance based on the page string, total items, and items per page.
 func Paginate(pageStr string, n, per int) (*Pagination, error) {
 	if n < 0 || per <= 0 {
 		return nil, errors.New("invalid quantity or per-page")

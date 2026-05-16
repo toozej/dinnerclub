@@ -1,23 +1,25 @@
 <!--menu.html-->
 {{ define "base/menu.html" }}
 
-<table>
-    <tr>
-        <a href="/"><button style="margin:5px;">Entries</button></a>
-        <a href="/restaurants"><button style="margin:5px;">Restaurants</button></a>
+<div class="menu-buttons">
+    <a href="/" class="btn btn-nav">Entries</a>
+    <a href="/restaurants" class="btn btn-nav">Restaurants</a>
 {{ if .is_logged_in }}
-        <!--should be shown only during authenticated view -->
-        <a href="/profile"><button style="margin:5px;">Profile</button></a>
-        <form action="/auth/logout" method="post">
-            <button style="margin:5px;" type="submit">Logout</button>
-        </form>
-        <a href="/entries/new"><button style="margin:5px;">+</button></a>
+    <!--should be shown only during authenticated view -->
+    <a href="/social/feed" class="btn btn-nav">Feed</a>
+    <a href="/social/notifications" class="btn btn-nav">Notifications</a>
+    <a href="/profile" class="btn btn-nav">Profile</a>
+    <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+    <form action="/auth/logout" method="post" style="display: inline;">
+        {{ CSRFInput .context }}
+        <button class="btn btn-nav" type="submit">Logout</button>
+    </form>
+    <a href="/entries/new" class="btn btn-add">+</a>
 {{ else }}
-        <!--should be shown for unauthenticated view-->
-        <a href="/auth/register"><button style="margin:5px;">Register</button></a>
-        <a href="/auth/login"><button style="margin:5px;">Login</button></a>
+    <!--should be shown for unauthenticated view-->
+    <a href="/auth/register" class="btn btn-nav">Register</a>
+    <a href="/auth/login" class="btn btn-nav">Login</a>
 {{ end }}
-    </tr>
-</table>
+</div>
 
 {{ end }}

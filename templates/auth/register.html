@@ -5,7 +5,9 @@
 {{ template "base/errors.html" . }}
 
 <h3>Register</h3>
+<!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
 <form action="/auth/register" method="POST">
+    {{ CSRFInput .context }}
     <label for="username">Username</label>
     <input type="text" name="username" id="username" required>
     <label for="password">Password</label>
@@ -18,7 +20,7 @@
     <input type="email" name="email" id="email" required>
     <label for="referralcode">Referral Code</label>
     <input type="text" name="referralcode" id="referralcode" required>
-    <p><button type="submit">Submit</button></p>
+    <p><button type="submit" class="btn btn-primary btn-form">Register</button></p>
 </form>
 
 {{ template "base/footer.html" .}}

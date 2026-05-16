@@ -6,13 +6,17 @@
 {{ template "base/errors.html" . }}
 
 <h3>Login</h3>
+<!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
 <form action="/auth/login" method="POST">
+    {{ CSRFInput .context }}
     <label for="username">Username</label>
     <input type="text" name="username" id="username" required>
     <label for="password">Password</label>
     <input type="password" name="password" id="password" minlength="10" required autocomplete="current-password">
-    <p><button type="submit">Submit</button></p>
+    <p><button type="submit" class="btn btn-primary btn-form">Login</button></p>
 </form>
+
+<p><a href="/auth/reset-password">Forgot your password?</a></p>
 
 {{ template "base/footer.html" .}}
 {{ end }}

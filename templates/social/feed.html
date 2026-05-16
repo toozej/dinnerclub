@@ -1,0 +1,286 @@
+<!--feed.html-->
+{{ define "social/feed.html" }}
+{{ template "base/header.html" .}}
+{{ template "base/errors.html" . }}
+
+<div class="feed-container">
+    <div class="feed-header">
+        <h2>Your Feed</h2>
+        <p class="feed-description">Recent entries from people you follow</p>
+    </div>
+
+    {{ if .entries }}
+    <div class="feed-list">
+    {{ range .entries }}
+        <div class="feed-item">
+            <div class="feed-item-author">
+                <a href="/users/{{ .Entry.Submitter }}/profile" class="author-link">
+                    <img src="{{ .AuthorAvatarURL }}" alt="{{ .Entry.Submitter }}'s avatar" class="author-avatar"
+                         onerror="this.src='/assets/default-avatar.png'">
+                    <div class="author-info">
+                        <span class="author-name">{{ .Entry.Submitter }}</span>
+                        {{ if .AuthorIsFounder }}
+                            <span class="founder-star" title="Founder">⭐</span>
+                        {{ end }}
+                        <span class="entry-time">{{ .Entry.CreatedAt.Format "Jan 2, 2006" }}</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="feed-item-content">
+                <h3 class="restaurant-name">
+                    <a href="/entries/{{ .Entry.ID }}">{{ .Entry.Name }}</a>
+                </h3>
+
+                {{ if .Entry.Ordered }}
+                    <p class="dish-name">{{ .Entry.Ordered }}</p>
+                {{ end }}
+
+                {{ if .Entry.Comments }}
+                    <p class="entry-notes">{{ .Entry.Comments }}</p>
+                {{ end }}
+
+                <div class="entry-tags">
+                    {{ if .Entry.Cuisine }}
+                        <span class="tag cuisine-tag">{{ .Entry.Cuisine }}</span>
+                    {{ end }}
+                    {{ if .Entry.MealService }}
+                        <span class="tag service-tag">{{ .Entry.MealService }}</span>
+                    {{ end }}
+                    {{ if .Entry.Location }}
+                        <span class="tag location-tag">📍 {{ .Entry.Location }}</span>
+                    {{ end }}
+                    {{ if .Entry.FoodRating }}
+                        <span class="tag rating-tag">{{ .Entry.FoodRating }}/5 ⭐</span>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+        {{ end }}
+    </div>
+
+    {{ if or .hasPrev .hasNext }}
+    <div class="feed-pagination">
+        {{ if .hasPrev }}
+            <a href="/social/feed?page={{ sub .currentPage 1 }}" class="btn btn-secondary">← Newer</a>
+        {{ end }}
+        <span class="page-info">Page {{ .currentPage }}</span>
+        {{ if .hasNext }}
+            <a href="/social/feed?page={{ add .currentPage 1 }}" class="btn btn-secondary">Older →</a>
+        {{ end }}
+    </div>
+    {{ end }}
+
+    {{ else }}
+    <div class="empty-feed">
+        <div class="empty-icon">🍽️</div>
+        <h3>Your feed is empty</h3>
+        <p>Follow other users to see their restaurant entries here.</p>
+        <a href="/entries/" class="btn btn-primary">Browse All Entries</a>
+    </div>
+    {{ end }}
+</div>
+
+<style>
+.feed-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.feed-header {
+    margin-bottom: 30px;
+}
+
+.feed-header h2 {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+}
+
+.feed-description {
+    color: #666;
+    margin: 0;
+}
+
+.feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.feed-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s;
+}
+
+.feed-item:hover {
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+.feed-item-author {
+    margin-bottom: 15px;
+}
+
+.author-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.author-link:hover .author-name {
+    color: #007bff;
+}
+
+.author-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eee;
+    flex-shrink: 0;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.author-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 15px;
+}
+
+.founder-star {
+    font-size: 14px;
+}
+
+.entry-time {
+    color: #888;
+    font-size: 13px;
+}
+
+.feed-item-content {
+    padding-left: 56px;
+}
+
+.restaurant-name {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+}
+
+.restaurant-name a {
+    color: #333;
+    text-decoration: none;
+}
+
+.restaurant-name a:hover {
+    color: #007bff;
+}
+
+.dish-name {
+    margin: 0 0 8px 0;
+    font-weight: 500;
+    color: #555;
+}
+
+.entry-notes {
+    margin: 0 0 12px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.entry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.cuisine-tag {
+    background: #e8f5e8;
+    color: #2d5a2d;
+}
+
+.service-tag {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.location-tag {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.rating-tag {
+    background: #fff8e1;
+    color: #f57f17;
+}
+
+.feed-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 40px;
+    padding: 20px 0;
+}
+
+.page-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.empty-feed {
+    text-align: center;
+    padding: 60px 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+}
+
+.empty-icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+}
+
+.empty-feed h3 {
+    margin: 0 0 10px 0;
+    color: #555;
+}
+
+.empty-feed p {
+    color: #888;
+    margin: 0 0 25px 0;
+}
+
+@media (max-width: 768px) {
+    .feed-item-content {
+        padding-left: 0;
+        margin-top: 10px;
+    }
+
+    .feed-pagination {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+
+{{ template "base/footer.html" .}}
+{{ end }}

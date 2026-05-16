@@ -1,3 +1,5 @@
+// Package config provides configuration management for the dinnerclub application.
+// It handles loading configuration from environment variables and .env files.
 package config
 
 import (
@@ -11,6 +13,7 @@ import (
 // Config is global object that holds all application level variables.
 var Config appConfig
 
+// appConfig holds all configuration values for the application.
 type appConfig struct {
 	LogLevel              string `env:"LOG_LEVEL,required"`
 	CityCode              string `env:"CITY_CODE,required"`
@@ -24,9 +27,17 @@ type appConfig struct {
 	JWTSecret             string `env:"JWT_SECRET,required"`
 	JWTRefreshTokenSecret string `env:"JWT_REFRESH_TOKEN_SECRET,required"`
 	SessionSecret         string `env:"SESSION_SECRET,required"`
+	CSRFSecret            string `env:"CSRF_SECRET,required"`
 	ReferralCode          string `env:"REFERRAL_CODE,required"`
+	// Rate limiting configuration
+	RateLimitEnabled      bool   `env:"RATE_LIMIT_ENABLED" envDefault:"true"`
+	RateLimitRequests     int    `env:"RATE_LIMIT_REQUESTS" envDefault:"100"`
+	RateLimitPeriod       string `env:"RATE_LIMIT_PERIOD" envDefault:"1m"`
+	RateLimitAuthRequests int    `env:"RATE_LIMIT_AUTH_REQUESTS" envDefault:"10"`
+	RateLimitAuthPeriod   string `env:"RATE_LIMIT_AUTH_PERIOD" envDefault:"1m"`
 }
 
+// LoadConfig loads configuration from the specified .env files and environment variables.
 func LoadConfig(configPaths ...string) error {
 	// try to load config from *.env files
 	err := LoadConfigFromFiles(configPaths)
@@ -43,7 +54,7 @@ func LoadConfig(configPaths ...string) error {
 	return nil
 }
 
-// LoadConfigFromFiles loads config from *.env files
+// LoadConfigFromFiles loads configuration from the specified .env files.
 func LoadConfigFromFiles(configPaths []string) error {
 	for _, path := range configPaths {
 		_, cerr := os.Stat(path)

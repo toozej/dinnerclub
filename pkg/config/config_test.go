@@ -19,7 +19,14 @@ func TestLoadConfig(t *testing.T) {
 		JWTSecret:             "test_jwt_secret",
 		JWTRefreshTokenSecret: "test_jwt_refresh_token_secret",
 		SessionSecret:         "test_session_secret",
+		CSRFSecret:            "test_csrf_secret",
 		ReferralCode:          "test_referral_code",
+		// Rate limiting fields with default values
+		RateLimitEnabled:      true,
+		RateLimitRequests:     100,
+		RateLimitPeriod:       "1m",
+		RateLimitAuthRequests: 10,
+		RateLimitAuthPeriod:   "1m",
 	}
 
 	// Call LoadConfig and check the result

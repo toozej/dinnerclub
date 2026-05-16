@@ -1,0 +1,544 @@
+<!--location.html-->
+{{ define "search/location.html" }}
+{{ template "base/header.html" .}}
+{{ template "base/errors.html" . }}
+
+<h3>Find Nearby Restaurants</h3>
+
+<section id="location-permission" class="location-section">
+    <div class="location-header">
+        <h4>Location Services</h4>
+        <p>Enable location services to automatically find restaurants near you, or enter your location manually.</p>
+    </div>
+    
+    <div class="location-options">
+        <button id="enable-location-btn" class="btn btn-primary btn-lg">
+            <span class="btn-icon">📍</span>
+            Use My Current Location
+        </button>
+        <button id="manual-location-btn" class="btn btn-outline-secondary btn-lg">
+            <span class="btn-icon">✏️</span>
+            Enter Location Manually
+        </button>
+    </div>
+    
+    <div id="location-status" class="location-status"></div>
+    
+    <div id="location-help" class="location-help" style="display: none;">
+        <h5>Having trouble with location services?</h5>
+        <ul>
+            <li>Make sure location services are enabled in your browser settings</li>
+            <li>Check that you've granted permission to this website</li>
+            <li>Try refreshing the page and clicking "Use My Current Location" again</li>
+            <li>If problems persist, use the "Enter Location Manually" option</li>
+        </ul>
+    </div>
+</section>
+
+<section id="manual-location" class="location-section" style="display: none;">
+    <div class="location-header">
+        <h4>Manual Location Entry</h4>
+        <p>Enter your coordinates or address to search for nearby restaurants.</p>
+    </div>
+    
+    <div class="location-input-methods">
+        <div class="input-method-tabs">
+            <button type="button" class="tab-btn active" data-method="coordinates">Coordinates</button>
+            <button type="button" class="tab-btn" data-method="address">Address</button>
+        </div>
+        
+        <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+        <form action="/location/search" method="POST" class="location-form">
+            {{ CSRFInput .context }}
+            
+            <div id="coordinates-input" class="input-method active">
+                <div class="coordinate-inputs">
+                    <div class="form-group">
+                        <label for="latitude">Latitude</label>
+                        <input type="number" step="0.000001" name="latitude" id="latitude" 
+                               placeholder="40.7128 (New York)" min="-90" max="90" required>
+                        <small class="form-help">Enter latitude between -90 and 90</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="longitude">Longitude</label>
+                        <input type="number" step="0.000001" name="longitude" id="longitude" 
+                               placeholder="-74.0060 (New York)" min="-180" max="180" required>
+                        <small class="form-help">Enter longitude between -180 and 180</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="address-input" class="input-method" style="display: none;">
+                <div class="form-group">
+                    <label for="address">Address or City</label>
+                    <input type="text" name="address" id="address" 
+                           placeholder="Enter city, address, or landmark">
+                    <small class="form-help">We'll convert this to coordinates for you</small>
+                </div>
+            </div>
+            
+            <div class="search-options">
+                <div class="form-group">
+                    <label for="radius">Search Radius</label>
+                    <div class="radius-input-group">
+                        <input type="number" step="0.1" name="radius" id="radius" value="10" 
+                               min="1" max="100" required>
+                        <span class="input-suffix">km</span>
+                        <div class="radius-presets">
+                            <button type="button" class="radius-preset" data-radius="5">5km</button>
+                            <button type="button" class="radius-preset" data-radius="10">10km</button>
+                            <button type="button" class="radius-preset" data-radius="25">25km</button>
+                            <button type="button" class="radius-preset" data-radius="50">50km</button>
+                        </div>
+                    </div>
+                    <small class="form-help">Choose how far to search (1-100 km)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="search-type">What to Search For</label>
+                    <select name="search-type" id="search-type" class="form-control">
+                        <option value="nearby">All Nearby Restaurants</option>
+                        <option value="wishlist">My Wishlist Items</option>
+                        <option value="unvisited">Places I Haven't Been</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success btn-form">
+                    <span class="btn-icon">🔍</span>
+                    Search Restaurants
+                </button>
+                <button type="button" id="clear-form-btn" class="btn btn-outline-secondary">
+                    Clear Form
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section id="location-results" class="location-section" style="display: none;">
+    <div class="results-header">
+        <h4>Nearby Restaurants</h4>
+        {{ if .results }}
+            <div class="results-summary">
+                <span class="result-count">{{ len .results }} restaurants found</span>
+                {{ if .radius }}
+                    <span class="search-params">within {{ .radius }}km</span>
+                {{ end }}
+            </div>
+        {{ end }}
+    </div>
+    
+    <div id="results-container">
+        {{ if .results }}
+            {{ if eq (len .results) 0 }}
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <h5>No restaurants found</h5>
+                    <p>We couldn't find any restaurants within {{ .radius }}km of your location.</p>
+                    
+                    <div class="expand-search-options">
+                        <p><strong>Try expanding your search:</strong></p>
+                        <div class="expand-buttons">
+                            <button id="expand-radius-btn" class="btn btn-primary" data-current-radius="{{ .radius }}">
+                                <span class="btn-icon">📍</span>
+                                Search {{ mul .radius 2 }}km radius
+                            </button>
+                            <button id="expand-more-btn" class="btn btn-outline-primary" data-current-radius="{{ .radius }}">
+                                <span class="btn-icon">🌍</span>
+                                Search {{ mul .radius 5 }}km radius
+                            </button>
+                        </div>
+                        
+                        <div class="search-suggestions">
+                            <p><strong>Other suggestions:</strong></p>
+                            <ul>
+                                <li>Try a different search type (wishlist, unvisited)</li>
+                                <li>Check if your location is correct</li>
+                                <li>Search in a nearby city or area</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {{ else }}
+                <div class="results-table-container">
+                    <table class="table results-table">
+                        <thead>
+                            <tr>
+                                <th>Restaurant</th>
+                                <th>Location</th>
+                                <th>Cuisine</th>
+                                <th>Distance</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{ range .results }}
+                            <tr class="result-row">
+                                <td class="restaurant-name">
+                                    <strong>{{ .Restaurant.Name }}</strong>
+                                </td>
+                                <td class="restaurant-location">{{ .Restaurant.Location }}</td>
+                                <td class="restaurant-cuisine">{{ .Restaurant.Cuisine }}</td>
+                                <td class="restaurant-distance">
+                                    <span class="distance-value">{{ printf "%.2f" .Distance }}</span>
+                                    <span class="distance-unit">km</span>
+                                </td>
+                                <td class="restaurant-status">
+                                    {{ if .Visited }}
+                                        <span class="badge badge-success">✓ Visited</span>
+                                    {{ else if .Wishlist }}
+                                        <span class="badge badge-info">⭐ Wishlist</span>
+                                    {{ else }}
+                                        <span class="badge badge-secondary">New</span>
+                                    {{ end }}
+                                </td>
+                                <td class="restaurant-actions">
+                                    <a href="/restaurants/{{ .Restaurant.ID }}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {{ end }}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="results-actions">
+                    <button id="refine-search-btn" class="btn btn-outline-secondary">
+                        <span class="btn-icon">⚙️</span>
+                        Refine Search
+                    </button>
+                    <button id="export-results-btn" class="btn btn-outline-secondary">
+                        <span class="btn-icon">📋</span>
+                        Export Results
+                    </button>
+                </div>
+            {{ end }}
+        {{ end }}
+    </div>
+</section>
+
+<script>
+// Enhanced GPS permission request functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const enableLocationBtn = document.getElementById('enable-location-btn');
+    const manualLocationBtn = document.getElementById('manual-location-btn');
+    const statusDiv = document.getElementById('location-status');
+    const manualLocationSection = document.getElementById('manual-location');
+    const locationHelpDiv = document.getElementById('location-help');
+    
+    // Tab switching for input methods
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const inputMethods = document.querySelectorAll('.input-method');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const method = this.dataset.method;
+            
+            // Update active tab
+            tabBtns.forEach(tab => tab.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show corresponding input method
+            inputMethods.forEach(input => {
+                input.classList.remove('active');
+                input.style.display = 'none';
+            });
+            
+            const targetInput = document.getElementById(method + '-input');
+            if (targetInput) {
+                targetInput.classList.add('active');
+                targetInput.style.display = 'block';
+            }
+        });
+    });
+    
+    // Radius preset buttons
+    const radiusPresets = document.querySelectorAll('.radius-preset');
+    const radiusInput = document.getElementById('radius');
+    
+    radiusPresets.forEach(preset => {
+        preset.addEventListener('click', function() {
+            const radius = this.dataset.radius;
+            radiusInput.value = radius;
+            
+            // Update active preset
+            radiusPresets.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // Enhanced GPS location request
+    enableLocationBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="btn-icon">⏳</span> Getting Location...';
+        statusDiv.innerHTML = '<div class="location-loading">Requesting location permission...</div>';
+        
+        if (!navigator.geolocation) {
+            showLocationError('Geolocation is not supported by your browser.', 'UNSUPPORTED');
+            return;
+        }
+        
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 300000 // 5 minutes
+        };
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                // Success - got location
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+                
+                statusDiv.innerHTML = `
+                    <div class="location-success">
+                        <div class="success-icon">✅</div>
+                        <div class="success-details">
+                            <strong>Location found!</strong><br>
+                            <small>Latitude: ${lat.toFixed(6)}, Longitude: ${lon.toFixed(6)}</small><br>
+                            <small>Accuracy: ±${Math.round(accuracy)}m</small>
+                        </div>
+                    </div>
+                `;
+                
+                // Auto-fill manual location form
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lon;
+                
+                // Show manual location section with pre-filled data
+                manualLocationSection.style.display = 'block';
+                manualLocationSection.scrollIntoView({ behavior: 'smooth' });
+                
+                // Reset button
+                enableLocationBtn.disabled = false;
+                enableLocationBtn.innerHTML = '<span class="btn-icon">📍</span> Use My Current Location';
+            },
+            function(error) {
+                showLocationError(getLocationErrorMessage(error), error.code);
+            },
+            options
+        );
+    });
+    
+    // Manual location button
+    manualLocationBtn.addEventListener('click', function() {
+        manualLocationSection.style.display = 'block';
+        manualLocationSection.scrollIntoView({ behavior: 'smooth' });
+        
+        // Focus on first input
+        const firstInput = manualLocationSection.querySelector('input');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 300);
+        }
+    });
+    
+    // Clear form button
+    const clearFormBtn = document.getElementById('clear-form-btn');
+    if (clearFormBtn) {
+        clearFormBtn.addEventListener('click', function() {
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('radius').value = '10';
+            document.getElementById('search-type').value = 'nearby';
+            
+            // Reset radius presets
+            radiusPresets.forEach(p => p.classList.remove('active'));
+            radiusPresets[1].classList.add('active'); // 10km default
+        });
+    }
+    
+    function showLocationError(message, errorCode) {
+        let helpText = '';
+        let showHelp = false;
+        
+        switch(errorCode) {
+            case 1: // PERMISSION_DENIED
+            case 'PERMISSION_DENIED':
+                helpText = 'Location access was denied. You can still search by entering your location manually.';
+                showHelp = true;
+                break;
+            case 2: // POSITION_UNAVAILABLE
+            case 'POSITION_UNAVAILABLE':
+                helpText = 'Your location could not be determined. Please check your GPS settings or enter your location manually.';
+                showHelp = true;
+                break;
+            case 3: // TIMEOUT
+            case 'TIMEOUT':
+                helpText = 'Location request timed out. Please try again or enter your location manually.';
+                break;
+            case 'UNSUPPORTED':
+                helpText = 'Your browser does not support location services. Please enter your location manually.';
+                showHelp = true;
+                break;
+        }
+        
+        statusDiv.innerHTML = `
+            <div class="location-error">
+                <div class="error-icon">⚠️</div>
+                <div class="error-details">
+                    <strong>Location Error</strong><br>
+                    <span>${message}</span><br>
+                    <small>${helpText}</small>
+                </div>
+            </div>
+        `;
+        
+        if (showHelp) {
+            locationHelpDiv.style.display = 'block';
+        }
+        
+        // Show manual location section
+        manualLocationSection.style.display = 'block';
+        
+        // Reset button
+        enableLocationBtn.disabled = false;
+        enableLocationBtn.innerHTML = '<span class="btn-icon">📍</span> Use My Current Location';
+    }
+    
+    function getLocationErrorMessage(error) {
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                return 'Location permission denied by user.';
+            case error.POSITION_UNAVAILABLE:
+                return 'Location information unavailable.';
+            case error.TIMEOUT:
+                return 'Location request timed out.';
+            default:
+                return 'An unknown location error occurred.';
+        }
+    }
+    
+    // Enhanced expand radius functionality
+    const expandBtn = document.getElementById('expand-radius-btn');
+    const expandMoreBtn = document.getElementById('expand-more-btn');
+    
+    if (expandBtn) {
+        expandBtn.addEventListener('click', function() {
+            const currentRadius = parseFloat(this.dataset.currentRadius) || 10;
+            const newRadius = currentRadius * 2;
+            
+            if (newRadius <= 100) {
+                updateSearchRadius(newRadius);
+            } else {
+                showRadiusLimitMessage();
+            }
+        });
+    }
+    
+    if (expandMoreBtn) {
+        expandMoreBtn.addEventListener('click', function() {
+            const currentRadius = parseFloat(this.dataset.currentRadius) || 10;
+            const newRadius = Math.min(currentRadius * 5, 100);
+            updateSearchRadius(newRadius);
+        });
+    }
+    
+    function updateSearchRadius(newRadius) {
+        const radiusInput = document.getElementById('radius');
+        if (radiusInput) {
+            radiusInput.value = newRadius;
+            
+            // Submit the form automatically
+            const form = document.querySelector('.location-form');
+            if (form) {
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="btn-icon">⏳</span> Searching...';
+                }
+                
+                form.submit();
+            }
+        }
+    }
+    
+    function showRadiusLimitMessage() {
+        const statusDiv = document.getElementById('location-status');
+        statusDiv.innerHTML = `
+            <div class="location-info">
+                <div class="info-icon">ℹ️</div>
+                <div class="info-details">
+                    <strong>Maximum search radius reached</strong><br>
+                    <small>The maximum search radius is 100km. Try searching in a different area.</small>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Refine search functionality
+    const refineSearchBtn = document.getElementById('refine-search-btn');
+    if (refineSearchBtn) {
+        refineSearchBtn.addEventListener('click', function() {
+            manualLocationSection.style.display = 'block';
+            manualLocationSection.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+    
+    // Export results functionality
+    const exportResultsBtn = document.getElementById('export-results-btn');
+    if (exportResultsBtn) {
+        exportResultsBtn.addEventListener('click', function() {
+            exportResultsToCSV();
+        });
+    }
+    
+    function exportResultsToCSV() {
+        const table = document.querySelector('.results-table');
+        if (!table) return;
+        
+        let csv = 'Restaurant,Location,Cuisine,Distance (km),Status\n';
+        
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const name = cells[0].textContent.trim();
+            const location = cells[1].textContent.trim();
+            const cuisine = cells[2].textContent.trim();
+            const distance = cells[3].querySelector('.distance-value').textContent.trim();
+            const status = cells[4].textContent.trim();
+            
+            csv += `"${name}","${location}","${cuisine}","${distance}","${status}"\n`;
+        });
+        
+        // Download CSV
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'nearby-restaurants.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+    
+    // Show manual location form by default if no results
+    {{ if not .results }}
+    document.getElementById('manual-location').style.display = 'block';
+    {{ end }}
+    
+    // Show results section if we have results
+    {{ if .results }}
+    document.getElementById('location-results').style.display = 'block';
+    {{ end }}
+    
+    // Initialize radius preset selection
+    const currentRadius = {{ .radius | default 10 }};
+    radiusPresets.forEach(preset => {
+        if (parseInt(preset.dataset.radius) === currentRadius) {
+            preset.classList.add('active');
+        }
+    });
+});
+</script>
+
+{{ template "base/footer.html" .}}
+{{ end }}

@@ -1,0 +1,561 @@
+<!--user_entries.html-->
+{{ define "users/user_entries.html" }}
+{{ template "base/header.html" .}}
+{{ template "base/errors.html" . }}
+
+<div class="user-entries-container">
+    <div class="entries-header">
+        <div class="user-info">
+            <img src="{{ .profile.AvatarURL }}" alt="{{ .profile.User.Username }}'s avatar" class="avatar-medium">
+            <div class="user-details">
+                <h2>{{ .profile.User.Username }}'s Entries</h2>
+                {{ if .profile.User.IsFounder }}
+                    <span class="founder-badge">⭐ Founder</span>
+                {{ end }}
+                <p class="entry-count">{{ .total_count }} total entries</p>
+            </div>
+        </div>
+        
+        <div class="header-actions">
+            <a href="/users/{{ .profile.User.Username }}/profile" class="btn btn-secondary">View Profile</a>
+            {{ if .profile.ShowFollowButton }}
+                <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+                <form action="/users/{{ .profile.User.Username }}/follow" method="post" class="follow-form">
+                    {{ CSRFInput .context }}
+                    {{ if .profile.IsFollowing }}
+                        <button type="submit" class="btn btn-secondary">Unfollow</button>
+                    {{ else }}
+                        <button type="submit" class="btn btn-primary">Follow</button>
+                    {{ end }}
+                </form>
+            {{ end }}
+        </div>
+    </div>
+    
+    {{ if .entries }}
+    <!-- Entry Categories Navigation -->
+    {{ if .categories }}
+    <div class="entry-navigation">
+        <h4>Browse by Category</h4>
+        <div class="category-filters">
+            <div class="filter-group">
+                <h5>Cuisine</h5>
+                <div class="filter-options">
+                    <a href="/users/{{ .profile.User.Username }}/entries" 
+                       class="filter-option {{ if not .filter_category }}active{{ end }}">
+                        All ({{ .total_count }})
+                    </a>
+                    {{ range $cuisine, $count := .categories.cuisine }}
+                    <a href="/users/{{ $.profile.User.Username }}/entries?category=cuisine&value={{ $cuisine }}" 
+                       class="filter-option {{ if and (eq $.filter_category "cuisine") (eq $.filter_value $cuisine) }}active{{ end }}">
+                        {{ $cuisine }} ({{ $count }})
+                    </a>
+                    {{ end }}
+                </div>
+            </div>
+            
+            {{ if .categories.location }}
+            <div class="filter-group">
+                <h5>Location</h5>
+                <div class="filter-options">
+                    {{ range $location, $count := .categories.location }}
+                    <a href="/users/{{ $.profile.User.Username }}/entries?category=location&value={{ $location }}" 
+                       class="filter-option {{ if and (eq $.filter_category "location") (eq $.filter_value $location) }}active{{ end }}">
+                        📍 {{ $location }} ({{ $count }})
+                    </a>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+            
+            {{ if .categories.meal_service }}
+            <div class="filter-group">
+                <h5>Meal Service</h5>
+                <div class="filter-options">
+                    {{ range $service, $count := .categories.meal_service }}
+                    <a href="/users/{{ $.profile.User.Username }}/entries?category=meal_service&value={{ $service }}" 
+                       class="filter-option {{ if and (eq $.filter_category "meal_service") (eq $.filter_value $service) }}active{{ end }}">
+                        {{ $service }} ({{ $count }})
+                    </a>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+            
+            {{ if .categories.rating }}
+            <div class="filter-group">
+                <h5>Rating</h5>
+                <div class="filter-options">
+                    {{ range $rating, $count := .categories.rating }}
+                    <a href="/users/{{ $.profile.User.Username }}/entries?category=rating&value={{ $rating }}" 
+                       class="filter-option {{ if and (eq $.filter_category "rating") (eq $.filter_value $rating) }}active{{ end }}">
+                        {{ $rating }}⭐ ({{ $count }})
+                    </a>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+    {{ end }}
+    
+    <!-- Current Filter Display -->
+    {{ if .filter_category }}
+    <div class="current-filter">
+        <span class="filter-label">Showing:</span>
+        <span class="filter-value">{{ .filter_category }} = {{ .filter_value }}</span>
+        <a href="/users/{{ .profile.User.Username }}/entries" class="clear-filter">Clear Filter</a>
+    </div>
+    {{ end }}
+
+    <div class="entries-list">
+        {{ range .entries }}
+        <div class="entry-item">
+            <div class="entry-main">
+                <div class="entry-header">
+                    <h3><a href="/entries/{{ .ID }}">{{ .RestaurantName }}</a></h3>
+                    <span class="entry-date">{{ .CreatedAt.Format "Jan 2, 2006" }}</span>
+                </div>
+                
+                {{ if .Dish }}
+                    <p class="entry-dish">{{ .Dish }}</p>
+                {{ end }}
+                
+                {{ if .Notes }}
+                    <p class="entry-notes">{{ .Notes }}</p>
+                {{ end }}
+                
+                <div class="entry-meta">
+                    <div class="meta-left">
+                        {{ if .Cuisine }}
+                            <span class="cuisine-tag">{{ .Cuisine }}</span>
+                        {{ end }}
+                        {{ if .MealService }}
+                            <span class="meal-service-tag">{{ .MealService }}</span>
+                        {{ end }}
+                        {{ if .Location }}
+                            <span class="location-tag">📍 {{ .Location }}</span>
+                        {{ end }}
+                    </div>
+                    <div class="meta-right">
+                        {{ if .Rating }}
+                            <span class="rating">{{ .Rating }}/5 ⭐</span>
+                        {{ end }}
+                        {{ if .Price }}
+                            <span class="price">${{ .Price }}</span>
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
+            
+            {{ if .ImageURL }}
+            <div class="entry-image">
+                <img src="{{ .ImageURL }}" alt="{{ .RestaurantName }}" loading="lazy">
+            </div>
+            {{ end }}
+        </div>
+        {{ end }}
+    </div>
+    
+    <!-- Pagination -->
+    {{ if or .has_prev .has_next }}
+    <div class="pagination">
+        {{ if .has_prev }}
+            <a href="/users/{{ .profile.User.Username }}/entries?page={{ sub .current_page 1 }}" class="btn btn-secondary">← Previous</a>
+        {{ end }}
+        
+        <span class="page-info">
+            Page {{ .current_page }} of {{ .total_pages }}
+        </span>
+        
+        {{ if .has_next }}
+            <a href="/users/{{ .profile.User.Username }}/entries?page={{ add .current_page 1 }}" class="btn btn-secondary">Next →</a>
+        {{ end }}
+    </div>
+    {{ end }}
+    
+    {{ else }}
+    <div class="no-entries">
+        <div class="empty-state">
+            <h3>No entries yet</h3>
+            <p>{{ .profile.User.Username }} hasn't posted any restaurant entries.</p>
+            {{ if .profile.CanEdit }}
+                <a href="/entries/new" class="btn btn-primary">Add Your First Entry</a>
+            {{ end }}
+        </div>
+    </div>
+    {{ end }}
+</div>
+
+<style>
+.user-entries-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.entries-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 25px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.avatar-medium {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ddd;
+}
+
+.user-details h2 {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.founder-badge {
+    display: inline-block;
+    background: #fff3cd;
+    color: #856404;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.entry-count {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.follow-form {
+    margin: 0;
+}
+
+.entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.entry-item {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.entry-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.entry-main {
+    flex: 1;
+    padding: 25px;
+}
+
+.entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.entry-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.entry-header a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.entry-header a:hover {
+    color: #007bff;
+}
+
+.entry-date {
+    font-size: 14px;
+    color: #888;
+    white-space: nowrap;
+}
+
+.entry-dish {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #555;
+}
+
+.entry-notes {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.entry-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.meta-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.meta-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.cuisine-tag, .meal-service-tag, .location-tag {
+    background: #e9ecef;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.cuisine-tag {
+    background: #e8f5e8;
+    color: #2d5a2d;
+}
+
+.meal-service-tag {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.location-tag {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.rating {
+    font-weight: bold;
+    color: #f39c12;
+    white-space: nowrap;
+}
+
+.price {
+    font-weight: bold;
+    color: #28a745;
+    white-space: nowrap;
+}
+
+.entry-image {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.entry-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 40px;
+    padding: 20px;
+}
+
+.page-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.no-entries {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.empty-state h3 {
+    margin: 0 0 10px 0;
+    color: #666;
+}
+
+.empty-state p {
+    margin: 0 0 20px 0;
+    color: #888;
+}
+
+.entry-navigation {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.entry-navigation h4 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.category-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+}
+
+.filter-group h5 {
+    margin: 0 0 10px 0;
+    color: #555;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-option {
+    display: block;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #495057;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.filter-option:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
+.filter-option.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.current-filter {
+    background: #e8f4fd;
+    border: 1px solid #bee5eb;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-label {
+    font-weight: 600;
+    color: #0c5460;
+}
+
+.filter-value {
+    background: #007bff;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.clear-filter {
+    color: #dc3545;
+    text-decoration: none;
+    font-size: 14px;
+    margin-left: auto;
+}
+
+.clear-filter:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .entries-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .user-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .entry-item {
+        flex-direction: column;
+    }
+    
+    .entry-image {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .entry-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .meta-right {
+        align-self: flex-end;
+    }
+    
+    .pagination {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+
+{{ template "base/footer.html" .}}
+{{ end }}

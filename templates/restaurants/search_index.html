@@ -1,0 +1,38 @@
+<!--search_restaurants.html-->
+{{ define "restaurants/search_index.html" }}
+{{ template "base/search_header.html" .}}
+
+<!--Loop over the restaurants variable, which is the list of restaurants-->
+{{ range .restaurants }}
+<section>
+    <!--Display the name of the restaurant-->
+    <h3><a href="/restaurants/{{ .ID }}">{{ .Name }}</a></h3>
+    <!--Display the content of the restaurant-->
+    Location: {{ .Location }}<br>
+    Cuisine: {{ .Cuisine }}<br>
+    Closed: {{ if .Closed }}Yes{{ else }}No{{ end }}<br>
+    {{ if .EntryCount }}
+    Entries: {{ .EntryCount }}<br>
+    {{ end }}
+</section>
+{{end}}
+
+<div>
+Pages: 
+{{ if ne .p.Prev 0 }}
+<a href="/restaurants/?page={{ .p.Prev }}">&laquo;</a>
+{{ end }}
+
+{{ range .p.Pages }}
+    {{ if eq . $.p.Page }}<strong>{{ . }}</strong>
+    {{ else }}<a href="/restaurants/?page={{ . }}">{{ . }}</a>
+    {{ end }}
+{{ end }}
+
+{{ if ne .p.Next 0 }}
+<a href="/restaurants/?page={{ .p.Next }}">&raquo;</a>
+{{ end }}
+</div>
+
+{{ template "base/search_footer.html" .}}
+{{ end }}

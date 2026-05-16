@@ -1,0 +1,40 @@
+<!--search_index.html-->
+{{ define "entries/search_index.html" }}
+{{ template "base/search_header.html" .}}
+
+<!--Loop over the entries variable, which is the list of entries-->
+{{ range .entries }}
+<section>
+    <!--Display the title of the entry which is also a link based on its ID-->
+    <h3><a href="/entries/{{ .ID }}">{{ .Name }}</a></h3>
+    <!--Display required fields of the entry-->
+    Submitter: {{ .Submitter }}<br>
+    Date: {{ .CreatedAt.Format "Jan 02 2006" }}<br>
+    Visited: {{ if .Visited }}Yes{{ else }}No{{ end }}<br>
+    Location: {{ .Location }}<br>
+    Cuisine: {{ .Cuisine }}<br>
+    {{ if .LookingForwardTo }}
+    Looking forward to: {{ .LookingForwardTo }}<br>
+    {{ end }}
+</section>
+{{end}}
+
+<div>
+Pages: 
+{{ if ne .p.Prev 0 }}
+<a href="/entries/?page={{ .p.Prev }}">&laquo;</a>
+{{ end }}
+
+{{ range .p.Pages }}
+    {{ if eq . $.p.Page }}<strong>{{ . }}</strong>
+    {{ else }}<a href="/entries/?page={{ . }}">{{ . }}</a>
+    {{ end }}
+{{ end }}
+
+{{ if ne .p.Next 0 }}
+<a href="/entries/?page={{ .p.Next }}">&raquo;</a>
+{{ end }}
+</div>
+
+{{ template "base/search_footer.html" .}}
+{{ end }}

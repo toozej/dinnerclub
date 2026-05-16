@@ -1,9 +1,12 @@
+// Package helpers provides utility functions for common operations
+// throughout the dinnerclub application.
 package helpers
 
 import (
 	"sort"
 )
 
+// SortByFrequency sorts a slice of strings by their frequency of occurrence in descending order.
 func SortByFrequency(input []string) []string {
 	frequencyMap := make(map[string]int)
 
@@ -36,6 +39,7 @@ func SortByFrequency(input []string) []string {
 	return output
 }
 
+// RemoveDuplicates removes duplicate strings from a slice while preserving order.
 func RemoveDuplicates(input []string) []string {
 	encountered := map[string]bool{}
 	output := []string{}

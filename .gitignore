@@ -16,7 +16,6 @@ backups/
 *.dll
 *.so
 *.dylib
-/dinnerclub
 /out
 
 # Test binary, built with `go test -c`
@@ -31,5 +30,4 @@ vendor/
 # Generated directories
 completions/
 manpages/
-docs/
 dist/

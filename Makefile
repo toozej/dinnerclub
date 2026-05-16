@@ -25,7 +25,11 @@ LDFLAGS = -s -w \
 	-X $(VER).Branch=$(or $(BRANCH),unknown) \
 	-X $(VER).BuiltAt=$(NOW) \
 	-X $(VER).Builder=$(BUILDER)
-	
+
+IMAGE_AUTHOR = toozej
+IMAGE_NAME = dinnerclub
+IMAGE_TAG = latest
+
 OS = $(shell uname -s)
 ifeq ($(OS), Linux)
 	OPENER=xdg-open
@@ -38,7 +42,7 @@ DEPLOY_APPNAME = $(subst .,,$(DEPLOY_HOSTNAME))
 DEPLOY_REGION = $(shell grep DEPLOY_REGION ./deploy.env | awk -F= '{print $$2}')
 DEPLOY_POSTGRES_PASSWORD = $(shell grep DEPLOY_POSTGRES_PASSWORD ./deploy.env | awk -F= '{print $$2}')
 
-.PHONY: all vet test build verify run up down distroless-build distroless-run local local-vet local-vendor local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify install deploy deploy-secrets deploy-only deploy-ip deploy-cert deploy-psql-console deploy-backup deploy-restore get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs update-golang-version docs docs-generate docs-serve clean help
+.PHONY: all vet test build verify run up down local local-vet local-vendor local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify local-install upload-secrets-to-gh upload-secrets-envfile-to-1pass deploy deploy-secrets deploy-only deploy-ip deploy-cert deploy-psql-console deploy-backup deploy-restore get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs update-golang-version docs clean help
 
 all: vet pre-commit clean test build verify run ## Run default workflow via Docker
 local: local-update-deps local-vendor local-vet pre-commit clean local-test local-cover local-build local-sign local-verify local-run ## Run default workflow using locally installed Golang toolchain
@@ -46,52 +50,45 @@ local-release-verify: local-release local-sign local-verify ## Release and verif
 pre-reqs: pre-commit-install ## Install pre-commit hooks and necessary binaries
 
 vet: ## Run `go vet` in Docker
-	docker build --target vet -f $(CURDIR)/Dockerfile -t toozej/dinnerclub:latest . 
+	docker build --target vet -f $(CURDIR)/Dockerfile.distroless -t $(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
 test: ## Run `go test` in Docker
-	docker build --target test -f $(CURDIR)/Dockerfile -t toozej/dinnerclub:latest . 
-	@echo -e "\nStatements missing coverage"
-	@grep -v -e " 1$$" c.out
+	docker build --progress=plain --target test -f $(CURDIR)/Dockerfile.distroless -t $(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
 build: ## Build Docker image, including running tests
-	docker build -f $(CURDIR)/Dockerfile -t toozej/dinnerclub:latest .
+	docker build -f $(CURDIR)/Dockerfile.distroless -t $(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG) .
 
 get-cosign-pub-key: ## Get dinnerclub Cosign public key from GitHub
 	test -f $(CURDIR)/dinnerclub.pub || curl --silent https://raw.githubusercontent.com/toozej/dinnerclub/main/dinnerclub.pub -O
 
 verify: get-cosign-pub-key ## Verify Docker image with Cosign
-	cosign verify --key $(CURDIR)/dinnerclub.pub toozej/dinnerclub:latest
+	cosign verify --key $(CURDIR)/dinnerclub.pub $(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 run: ## Run built Docker image
-	-docker kill dinnerclub
-	docker run --rm -d --name dinnerclub -p 8080:8080 -v $(CURDIR)/config:/config toozej/dinnerclub:latest
+	-docker kill $(IMAGE_NAME)
+	docker run --rm -d --name $(IMAGE_NAME) -p 8080:8080 -v $(CURDIR)/config:/config $(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 up: ## Run Docker Compose project
-	docker compose -f docker-compose.yml down --remove-orphans
-	docker compose -f docker-compose.yml build --pull
-	docker compose -f docker-compose.yml up -d
+	docker compose -f docker-compose-dev.yml down --remove-orphans
+	docker compose -f docker-compose-dev.yml build --pull
+	docker compose -f docker-compose-dev.yml up -d
 
 down: ## Stop running Docker Compose project
-	docker compose -f docker-compose.yml down --remove-orphans
+	docker compose -f docker-compose-dev.yml down --remove-orphans
 
 rebuild: ## Rebuild running application container in Docker Compose project
-	docker compose -f docker-compose.yml stop dinnerclub_app
-	docker compose -f docker-compose.yml build --pull dinnerclub_app
-	docker compose -f docker-compose.yml up -d dinnerclub_app
+	docker compose -f docker-compose-dev.yml stop dinnerclub_app
+	docker compose -f docker-compose-dev.yml build --pull dinnerclub_app
+	docker compose -f docker-compose-dev.yml up -d dinnerclub_app
 
 logs: ## View running Docker Compose project logs
-	docker compose -f docker-compose.yml logs --tail=100 -f
-
-distroless-build: ## Build Docker image using distroless as final base
-	docker build -f $(CURDIR)/Dockerfile.distroless -t toozej/dinnerclub:distroless . 
-
-distroless-run: ## Run built Docker image using distroless as final base
-	docker run --rm --name dinnerclub -v $(CURDIR)/config:/config toozej/dinnerclub:distroless
+	docker compose -f docker-compose-dev.yml logs --tail=100 -f
 
 local-update-deps: ## Run `go get -t -u ./...` to update Go module dependencies
 	go get -t -u ./...
 
 local-vet: ## Run `go vet` using locally installed golang toolchain
+	go fmt $(CURDIR)/...
 	go vet $(CURDIR)/...
 
 local-vendor: ## Run `go mod vendor` using locally installed golang toolchain
@@ -107,36 +104,47 @@ local-cover: ## View coverage report in web browser
 	go tool cover -html=c.out
 
 local-build: ## Run `go build` using locally installed golang toolchain
-	CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" $(CURDIR)/cmd/dinnerclub/
+	CGO_ENABLED=0 go build -o $(CURDIR)/out/ -ldflags="$(LDFLAGS)"
 
 local-run: ## Run locally built binary
-	$(CURDIR)/dinnerclub
+	if test -e $(CURDIR)/app.env; then \
+		export `cat $(CURDIR)/app.env | xargs` && $(CURDIR)/out/dinnerclub serve; \
+	else \
+		echo "No environment variables found at $(CURDIR)/app.env. Cannot run."; \
+	fi
 
 local-release-test: ## Build assets and test goreleaser config using locally installed golang toolchain and goreleaser
 	goreleaser check
-	goreleaser build --rm-dist --snapshot
+	goreleaser build --clean --snapshot
 
 local-release: local-test docker-login ## Release assets using locally installed golang toolchain and goreleaser
 	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/cicd.env; then \
-		export `cat $(CURDIR)/cicd.env | xargs` && git push origin `git describe --tags` && goreleaser release --rm-dist; \
+		export `cat $(CURDIR)/cicd.env | xargs` && git push origin `git describe --tags` && goreleaser release --clean; \
 	else \
 		echo "Missing required cosign private key or environment variables. Cannot release."; \
 	fi
 
 local-sign: local-test ## Sign locally installed golang toolchain and cosign
 	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/cicd.env; then \
-		export `cat $(CURDIR)/cicd.env | xargs` && cosign sign-blob --key=$(CURDIR)/dinnerclub.key --output-signature=$(CURDIR)/dinnerclub.sig $(CURDIR)/dinnerclub; \
+		export `cat $(CURDIR)/cicd.env | xargs` && cosign sign-blob --key=$(CURDIR)/dinnerclub.key --output-signature=$(CURDIR)/dinnerclub.sig $(CURDIR)/out/dinnerclub; \
 	else \
 		echo "no cosign private key found at $(CURDIR)/dinnerclub.key. Cannot release."; \
 	fi
 
 local-verify: get-cosign-pub-key ## Verify locally compiled binary
 	# cosign here assumes you're using Linux AMD64 binary
-	cosign verify-blob --key $(CURDIR)/dinnerclub.pub --signature $(CURDIR)/dinnerclub.sig $(CURDIR)/dinnerclub
+	cosign verify-blob --key $(CURDIR)/dinnerclub.pub --signature $(CURDIR)/dinnerclub.sig $(CURDIR)/out/dinnerclub
 
-install: local-build local-verify ## Install compiled binary to local machine
-	sudo cp $(CURDIR)/dinnerclub /usr/local/bin/dinnerclub
+local-install: local-build local-verify ## Install compiled binary to local machine
+	sudo cp $(CURDIR)/out/dinnerclub /usr/local/bin/dinnerclub
 	sudo chmod 0755 /usr/local/bin/dinnerclub
+
+upload-secrets-to-gh: ## Upload secrets from .env file to GitHub Actions Secrets + Dependabot
+	$(CURDIR)/scripts/upload_secrets_to_github.sh dinnerclub
+
+upload-secrets-envfile-to-1pass: ## Upload secrets and .env file to 1Password
+	$(CURDIR)/scripts/upload_secrets_to_1password secrets dinnerclub
+	$(CURDIR)/scripts/upload_secrets_to_1password envfile dinnerclub
 
 deploy: deploy-secrets deploy-only deploy-ip deploy-cert ## Deploy to fly.io
 	flyctl status
@@ -225,9 +233,11 @@ pre-commit-install: ## Install pre-commit hooks and necessary binaries
 	# shellcheck
 	command -v shellcheck || sudo dnf install -y ShellCheck || sudo apt install -y shellcheck
 	# checkmake
-	go install github.com/mrtazz/checkmake/cmd/checkmake@latest
+	go install github.com/checkmake/checkmake/cmd/checkmake@latest
 	# goreleaser
 	go install github.com/goreleaser/goreleaser/v2@latest
+	# actionlint
+	command -v actionlint || brew install actionlint || go install github.com/rhysd/actionlint/cmd/actionlint@latest
 	# syft
 	command -v syft || curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 	# cosign
@@ -236,6 +246,12 @@ pre-commit-install: ## Install pre-commit hooks and necessary binaries
 	go install github.com/google/go-licenses@latest
 	# go vuln check
 	go install golang.org/x/vuln/cmd/govulncheck@latest
+	# air
+	go install github.com/air-verse/air@latest
+	# install and update pre-commits
+	# determine if on Debian 12 and if so use pip to install more modern pre-commit version
+	grep --silent "VERSION=\"12 (bookworm)\"" /etc/os-release && apt install -y --no-install-recommends python3-pip && python3 -m pip install --break-system-packages --upgrade pre-commit || echo "OS is not Debian 12 bookworm"
+	command -v pre-commit || brew install pre-commit || sudo dnf install -y pre-commit || sudo apt install -y pre-commit
 	# install and update pre-commits
 	pre-commit install
 	pre-commit autoupdate
@@ -248,23 +264,22 @@ pre-commit-run: ## Run pre-commit hooks against all files
 
 update-golang-version: ## Update to latest Golang version across the repo
 	@VERSION=`curl -s "https://go.dev/dl/?mode=json" | jq -r '.[0].version' | sed 's/go//' | cut -d '.' -f 1,2`; \
-	echo "Updating Golang to $$VERSION"; \
-	./scripts/update_golang_version.sh $$VERSION
+	$(CURDIR)/scripts/update_golang_version.sh $$VERSION
 
-docs: docs-generate docs-serve ## Generate and serve documentation
+docs: ## Serve Go documentation
+	@echo "Starting Go documentation server on localhost"
+	@echo "Use Ctrl+C to stop the server"
+	go doc -http
 
-docs-generate:
-	docker build -f $(CURDIR)/Dockerfile.docs -t toozej/dinnerclub:docs . 
-	docker run --rm --name dinnerclub-docs -v $(CURDIR):/package -v $(CURDIR)/docs:/docs toozej/dinnerclub:docs
-
-docs-serve: ## Serve documentation on http://localhost:9000
-	docker run -d --rm --name dinnerclub-docs-serve -p 9000:3080 -v $(CURDIR)/docs:/data thomsch98/markserv
-	$(OPENER) http://localhost:9000/docs.md
-	@echo -e "to stop docs container, run:\n"
-	@echo "docker kill dinnerclub-docs-serve"
-
-clean: ## Remove any locally compiled binaries
-	rm -f $(CURDIR)/dinnerclub
+clean: ## Remove any locally compiled binaries, profiles, demo output, and built Docker image
+	@echo "=== Cleaning up compiled binaries, profiles, demo output, and built Docker image ==="
+	@rm -f $(CURDIR)/out/dinnerclub
+	@rm -rf $(CURDIR)/profiles/
+	@rm -rf $(CURDIR)/dist/
+	@rm -rf $(CURDIR)/c.out
+	@rm -rf $(CURDIR)/manpages/
+	@rm -rf $(CURDIR)/completions/
+	-docker image rm $(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 help: ## Display help text
 	@grep -E '^[a-zA-Z_-]+ ?:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

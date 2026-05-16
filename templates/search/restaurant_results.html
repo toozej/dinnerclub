@@ -1,0 +1,22 @@
+{{ define "search/restaurant_results.html" }}
+<div class="search-results">
+  <h3>Restaurant Results ({{ len .restaurants }})</h3>
+  
+  {{ if .restaurants }}
+    {{ range .restaurants }}
+    <section class="search-result-item">
+        <h4><a href="/restaurants/name/{{ .Name }}">{{ .Name }}</a></h4>
+        <div class="result-details">
+            <span class="location">Location: {{ .Location }}</span><br>
+            <span class="cuisine">Cuisine: {{ .Cuisine }}</span><br>
+            {{ if .EntryCount }}
+            <span class="entry-count">Entries: {{ .EntryCount }}</span><br>
+            {{ end }}
+        </div>
+    </section>
+    {{ end }}
+  {{ else }}
+    <p class="no-results">No restaurants found matching your search.</p>
+  {{ end }}
+</div>
+{{ end }}

@@ -1,0 +1,51 @@
+{{ define "base/search_header.html" }}
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Dinner Club</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+
+    <!--Use simplecss to make the application look nice-->
+    <!--From: https://github.com/kevquirk/simple.css/wiki/Getting-Started-With-Simple.css-->
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"> <!-- nosemgrep: html.security.audit.missing-integrity.missing-integrity -->
+    <link rel="stylesheet" href="/assets/style.css"> <!-- nosemgrep: html.security.audit.missing-integrity.missing-integrity -->
+
+    <!--Enhanced UI JavaScript-->
+    <script src="/assets/dinnerclub.js"></script> <!-- nosemgrep: html.security.audit.missing-integrity.missing-integrity -->
+
+    <!--Use GoatCounter for application analytics-->
+	<script data-goatcounter="https://stats.dinner.club/count" async src="//stats.dinner.club/count.js"></script> <!-- nosemgrep: html.security.audit.missing-integrity.missing-integrity -->
+  </head>
+
+  <body>
+    <!-- Fixed header section - 25% of screen height -->
+    <div class="search-header">
+      <div class="search-nav">
+        {{ template "base/search_menu.html" . }}
+      </div>
+      
+      <div class="search-container">
+        <h2>{{ .citycode }} Dinner Club</h2>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search entries and restaurants... (try 'wishlist' or 'author:username')" />
+          <button id="searchButton" type="button" class="btn btn-primary btn-search">Search</button>
+          <button id="clearSearch" type="button" class="btn btn-secondary btn-search" style="display: none;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content area - 75% of screen height -->
+    <div class="content-area">
+      {{ if .messages }}
+      {{ range .messages }}
+      <div class="flash-message" role="alert">
+          {{ . }}
+      </div>
+      {{ end }}
+      {{ end }}
+
+      <!-- Default content area -->
+      <div id="defaultContent">
+{{ end }}

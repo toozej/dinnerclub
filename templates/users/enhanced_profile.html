@@ -1,0 +1,829 @@
+<!--enhanced_profile.html-->
+{{ define "users/enhanced_profile.html" }}
+{{ template "base/header.html" .}}
+{{ template "base/errors.html" . }}
+
+<div class="enhanced-profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <img src="{{ .profile.AvatarURL }}" alt="Your avatar" class="avatar-large">
+            {{ if .profile.User.IsFounder }}
+                <span class="founder-badge" title="Founder">⭐</span>
+            {{ end }}
+            <div class="avatar-actions">
+                <button class="btn btn-sm btn-secondary" onclick="document.getElementById('avatar-upload').click()">Change Avatar</button>
+                <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+                <form id="avatar-form" action="/profile/avatar" method="post" enctype="multipart/form-data" style="display: none;">
+                    {{ CSRFInput .context }}
+                    <input type="file" id="avatar-upload" name="avatar" accept="image/*" onchange="document.getElementById('avatar-form').submit()">
+                </form>
+            </div>
+        </div>
+        
+        <div class="profile-info">
+            <h2 class="profile-username">{{ .profile.User.Username }}</h2>
+            {{ if .profile.User.Firstname }}{{ if .profile.User.Lastname }}
+                <p class="profile-name">{{ .profile.User.Firstname }} {{ .profile.User.Lastname }}</p>
+            {{ end }}{{ end }}
+            
+            {{ if .profile.User.Bio }}
+                <p class="profile-bio">{{ .profile.User.Bio }}</p>
+            {{ else }}
+                <p class="profile-bio-empty">Add a bio to tell others about yourself</p>
+            {{ end }}
+            
+            <div class="profile-meta">
+                <span class="join-date">Member since {{ .profile.User.JoinDate.Format "January 2006" }}</span>
+                {{ if .profile.User.IsFounder }}
+                    <span class="founder-status">• Founder</span>
+                {{ end }}
+            </div>
+            
+            <div class="profile-actions">
+                <a href="/profile" class="btn btn-primary">Edit Profile</a>
+                <a href="/users/{{ .profile.User.Username }}/profile" class="btn btn-secondary">View Public Profile</a>
+                <button class="btn btn-secondary" onclick="toggleBioEdit()">Edit Bio</button>
+            </div>
+            
+            <!-- Bio Edit Form (hidden by default) -->
+            <div id="bio-edit-form" class="bio-edit-form" style="display: none;">
+                <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+                <form action="/profile/update-bio" method="post">
+                    {{ CSRFInput .context }}
+                    <textarea name="bio" placeholder="Tell others about yourself..." maxlength="500" rows="3">{{ .profile.User.Bio }}</textarea>
+                    <div class="bio-edit-actions">
+                        <button type="submit" class="btn btn-primary">Save Bio</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleBioEdit()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="profile-stats-detailed">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-content">
+                    <span class="stat-number">{{ .stats.entries }}</span>
+                    <span class="stat-label">Total Entries</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <span class="stat-number">{{ .stats.followers }}</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👤</div>
+                <div class="stat-content">
+                    <span class="stat-number">{{ .stats.following }}</span>
+                    <span class="stat-label">Following</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-content">
+                    <span class="stat-number">{{ .stats.referrals }}</span>
+                    <span class="stat-label">Referrals</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">❤️</div>
+                <div class="stat-content">
+                    <span class="stat-number">{{ .stats.total_likes }}</span>
+                    <span class="stat-label">Total Likes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="profile-sections">
+        <div class="section privacy-section">
+            <h3>Privacy Settings</h3>
+            <p class="section-description">Control who can see your profile and entries</p>
+            
+            <div class="current-privacy-info">
+                <div class="privacy-status">
+                    <span class="privacy-icon">
+                        {{ if eq .profile.User.PrivacyLevel 0 }}🌐{{ else if eq .profile.User.PrivacyLevel 1 }}👥{{ else }}🔒{{ end }}
+                    </span>
+                    <div class="privacy-details">
+                        <strong>Current Setting: 
+                            {{ if eq .profile.User.PrivacyLevel 0 }}Public
+                            {{ else if eq .profile.User.PrivacyLevel 1 }}Followers Only
+                            {{ else }}Private{{ end }}
+                        </strong>
+                        <p class="privacy-description">
+                            {{ if eq .profile.User.PrivacyLevel 0 }}Anyone can see your profile and entries
+                            {{ else if eq .profile.User.PrivacyLevel 1 }}Only people you follow back can see your full profile
+                            {{ else }}Your profile is completely private{{ end }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
+            <form action="/profile/privacy" method="post" class="privacy-form">
+                {{ CSRFInput .context }}
+                <div class="privacy-options">
+                    <label class="privacy-option">
+                        <input type="radio" name="privacy_level" value="0" {{ if eq .profile.User.PrivacyLevel 0 }}checked{{ end }}>
+                        <div class="option-content">
+                            <div class="option-header">
+                                <span class="option-icon">🌐</span>
+                                <strong>Public</strong>
+                            </div>
+                            <span>Anyone can see your profile and entries</span>
+                            <div class="option-features">
+                                <span class="feature">✓ Discoverable in search</span>
+                                <span class="feature">✓ Visible to all users</span>
+                                <span class="feature">✓ Entries visible to everyone</span>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="privacy-option">
+                        <input type="radio" name="privacy_level" value="1" {{ if eq .profile.User.PrivacyLevel 1 }}checked{{ end }}>
+                        <div class="option-content">
+                            <div class="option-header">
+                                <span class="option-icon">👥</span>
+                                <strong>Followers Only</strong>
+                            </div>
+                            <span>Only people you follow back can see your full profile</span>
+                            <div class="option-features">
+                                <span class="feature">✓ Limited discoverability</span>
+                                <span class="feature">✓ Profile visible to followers</span>
+                                <span class="feature">✓ Can still be followed</span>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="privacy-option">
+                        <input type="radio" name="privacy_level" value="2" {{ if eq .profile.User.PrivacyLevel 2 }}checked{{ end }}>
+                        <div class="option-content">
+                            <div class="option-header">
+                                <span class="option-icon">🔒</span>
+                                <strong>Private</strong>
+                            </div>
+                            <span>Your profile is completely private</span>
+                            <div class="option-features">
+                                <span class="feature">✓ Not discoverable</span>
+                                <span class="feature">✓ Profile hidden from all</span>
+                                <span class="feature">✓ Maximum privacy</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Privacy Settings</button>
+            </form>
+        </div>
+        
+        <div class="section recent-activity">
+            <h3>Recent Activity</h3>
+            {{ if .profile.RecentEntries }}
+                <div class="activity-list">
+                    {{ range .profile.RecentEntries }}
+                    <div class="activity-item">
+                        <div class="activity-icon">🍽️</div>
+                        <div class="activity-content">
+                            <p><strong><a href="/entries/{{ .ID }}">{{ .RestaurantName }}</a></strong></p>
+                            {{ if .Dish }}<p class="activity-detail">{{ .Dish }}</p>{{ end }}
+                            <p class="activity-date">{{ .CreatedAt.Format "Jan 2, 2006" }}</p>
+                        </div>
+                    </div>
+                    {{ end }}
+                </div>
+                <div class="section-footer">
+                    <a href="/users/{{ .profile.User.Username }}/entries" class="btn btn-secondary">View All Entries</a>
+                </div>
+            {{ else }}
+                <div class="empty-state">
+                    <p>You haven't posted any entries yet.</p>
+                    <a href="/entries/new" class="btn btn-primary">Add Your First Entry</a>
+                </div>
+            {{ end }}
+        </div>
+        
+        {{ if .profile.User.ReferralCode }}
+        <div class="section referral-section">
+            <h3>Referral Program</h3>
+            <p class="section-description">Invite friends and earn rewards</p>
+            
+            <div class="referral-info">
+                <div class="referral-code">
+                    <label>Your Referral Code:</label>
+                    <div class="code-display">
+                        <code id="referral-code">{{ .profile.User.ReferralCode }}</code>
+                        <button class="btn btn-sm btn-secondary" onclick="copyReferralCode()">Copy</button>
+                    </div>
+                </div>
+                
+                <div class="referral-stats">
+                    <p><strong>{{ .stats.referrals }}</strong> successful referrals</p>
+                </div>
+                
+                <div class="referral-message-section">
+                    <label>Generate Invitation Message:</label>
+                    <textarea id="referral-custom-message" placeholder="Add a personal message (optional)" rows="3"></textarea>
+                    <button class="btn btn-primary" onclick="generateReferralMessage()">Generate Message</button>
+                    <div id="referral-message-output" class="referral-message-output" style="display: none;">
+                        <label>Your referral message:</label>
+                        <div class="message-display">
+                            <pre id="referral-message-text"></pre>
+                            <button class="btn btn-sm btn-secondary" onclick="copyReferralMessage()">Copy Message</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{ end }}
+
+        <div class="section security-section">
+            <h3>Account Security</h3>
+            <p class="section-description">Manage your account security settings</p>
+            
+            <div class="security-items">
+                <div class="security-item">
+                    <div class="security-item-info">
+                        <strong>Two-Factor Authentication</strong>
+                        <p>
+                            {{ if .profile.User.TwoFactorEnabled }}
+                                <span class="security-enabled">🔒 Enabled</span>
+                            {{ else }}
+                                <span class="security-disabled">🔓 Not enabled</span>
+                            {{ end }}
+                        </p>
+                    </div>
+                    <a href="/auth/2fa" class="btn btn-secondary btn-sm">
+                        {{ if .profile.User.TwoFactorEnabled }}Manage{{ else }}Enable{{ end }}
+                    </a>
+                </div>
+                <div class="security-item">
+                    <div class="security-item-info">
+                        <strong>Email Address</strong>
+                        <p>{{ .profile.User.Email }}</p>
+                    </div>
+                    <a href="/profile/change-email" class="btn btn-secondary btn-sm">Change</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.enhanced-profile-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.profile-avatar {
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.avatar-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #ddd;
+    margin-bottom: 15px;
+}
+
+.founder-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #fff;
+    border-radius: 50%;
+    padding: 8px;
+    font-size: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.avatar-actions {
+    margin-top: 10px;
+}
+
+.profile-info {
+    flex-grow: 1;
+}
+
+.profile-username {
+    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.profile-name {
+    margin: 0 0 15px 0;
+    color: #666;
+    font-size: 20px;
+}
+
+.profile-bio {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #555;
+}
+
+.profile-bio-empty {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    color: #999;
+    font-style: italic;
+}
+
+.profile-meta {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.founder-status {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.profile-stats-detailed {
+    margin-bottom: 40px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-icon {
+    font-size: 32px;
+    opacity: 0.8;
+}
+
+.stat-content {
+    flex-grow: 1;
+}
+
+.stat-number {
+    display: block;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    line-height: 1;
+}
+
+.stat-label {
+    display: block;
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.profile-sections {
+    display: grid;
+    gap: 30px;
+}
+
+.section {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.section h3 {
+    margin: 0 0 10px 0;
+    font-size: 22px;
+    color: #333;
+}
+
+.section-description {
+    margin: 0 0 25px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.privacy-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.current-privacy-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-left: 4px solid #007bff;
+}
+
+.privacy-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.privacy-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.privacy-details strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.privacy-description {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.privacy-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.privacy-option:hover {
+    border-color: #007bff;
+    background: #f8f9ff;
+}
+
+.privacy-option input[type="radio"] {
+    margin: 0;
+    margin-top: 2px;
+}
+
+.privacy-option input[type="radio"]:checked + .option-content {
+    color: #007bff;
+}
+
+.privacy-option input[type="radio"]:checked + .option-content .option-header strong {
+    color: #007bff;
+}
+
+.option-content {
+    flex-grow: 1;
+}
+
+.option-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.option-icon {
+    font-size: 18px;
+}
+
+.option-header strong {
+    font-size: 16px;
+}
+
+.option-content > span {
+    display: block;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.option-features {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.feature {
+    font-size: 12px;
+    color: #28a745;
+    font-weight: 500;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.activity-icon {
+    font-size: 20px;
+    opacity: 0.7;
+}
+
+.activity-content {
+    flex-grow: 1;
+}
+
+.activity-content p {
+    margin: 0 0 5px 0;
+}
+
+.activity-content a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.activity-content a:hover {
+    text-decoration: underline;
+}
+
+.activity-detail {
+    color: #666;
+    font-size: 14px;
+}
+
+.activity-date {
+    color: #888;
+    font-size: 12px;
+}
+
+.section-footer {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.referral-info {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.referral-code {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.code-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.code-display code {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 16px;
+    border: 1px solid #dee2e6;
+    flex-grow: 1;
+}
+
+.referral-stats {
+    padding: 15px;
+    background: #e8f5e8;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.referral-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: vertical;
+    margin-bottom: 15px;
+}
+
+.bio-edit-form {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.bio-edit-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 15px;
+}
+
+.bio-edit-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.referral-message-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.referral-message-section textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.referral-message-output {
+    margin-top: 10px;
+}
+
+.message-display {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 8px;
+}
+
+.message-display pre {
+    margin: 0 0 10px 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.security-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.security-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    gap: 15px;
+}
+
+.security-item-info strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.security-item-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.security-enabled {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.security-disabled {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .profile-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .privacy-options {
+        gap: 10px;
+    }
+    
+    .privacy-option {
+        padding: 10px;
+    }
+    
+    .bio-edit-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+function copyReferralCode() {
+    const code = document.getElementById('referral-code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        alert('Referral code copied to clipboard!');
+    });
+}
+
+async function generateReferralMessage() {
+    const customMessage = document.getElementById('referral-custom-message').value;
+    const outputDiv = document.getElementById('referral-message-output');
+    const messageText = document.getElementById('referral-message-text');
+
+    try {
+        const response = await fetch('/api/referrals/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ custom_message: customMessage })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.error || 'Failed to generate referral message.');
+            return;
+        }
+
+        messageText.textContent = data.message;
+        outputDiv.style.display = 'block';
+
+    } catch (err) {
+        alert('An error occurred. Please try again.');
+    }
+}
+
+function copyReferralMessage() {
+    const text = document.getElementById('referral-message-text').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Referral message copied to clipboard!');
+    });
+}
+
+function toggleBioEdit() {
+    const bioForm = document.getElementById('bio-edit-form');
+    const bioText = document.querySelector('.profile-bio, .profile-bio-empty');
+    
+    if (bioForm.style.display === 'none') {
+        bioForm.style.display = 'block';
+        if (bioText) bioText.style.display = 'none';
+    } else {
+        bioForm.style.display = 'none';
+        if (bioText) bioText.style.display = 'block';
+    }
+}
+</script>
+
+{{ template "base/footer.html" .}}
+{{ end }}

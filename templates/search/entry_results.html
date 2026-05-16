@@ -1,0 +1,30 @@
+{{ define "search/entry_results.html" }}
+<div class="search-results">
+  <h3>Entry Results ({{ len .entries }})</h3>
+  
+  {{ if .entries }}
+    {{ range .entries }}
+    <section class="search-result-item">
+        <!--Display the title of the entry which is also a link based on its ID-->
+        <h4><a href="/entries/{{ .ID }}">{{ .Name }}</a></h4>
+        <!--Display required fields of the entry-->
+        <div class="result-details">
+            <span class="submitter">Submitter: {{ .Submitter }}</span><br>
+            <span class="date">Date: {{ .CreatedAt.Format "Jan 02 2006" }}</span><br>
+            <span class="visited">Visited: {{ if .Visited }}Yes{{ else }}No{{ end }}</span><br>
+            <span class="location">Location: {{ .Location }}</span><br>
+            <span class="cuisine">Cuisine: {{ .Cuisine }}</span><br>
+            {{ if .LookingForwardTo }}
+            <span class="looking-forward">Looking forward to: {{ .LookingForwardTo }}</span><br>
+            {{ end }}
+            {{ if .Comments }}
+            <span class="comments">Comments: {{ .Comments }}</span><br>
+            {{ end }}
+        </div>
+    </section>
+    {{ end }}
+  {{ else }}
+    <p class="no-results">No entries found matching your search.</p>
+  {{ end }}
+</div>
+{{ end }}
