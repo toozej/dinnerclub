@@ -42,7 +42,7 @@ DEPLOY_APPNAME = $(subst .,,$(DEPLOY_HOSTNAME))
 DEPLOY_REGION = $(shell grep DEPLOY_REGION ./deploy.env | awk -F= '{print $$2}')
 DEPLOY_POSTGRES_PASSWORD = $(shell grep DEPLOY_POSTGRES_PASSWORD ./deploy.env | awk -F= '{print $$2}')
 
-.PHONY: all vet test build verify run up down local local-vet local-vendor local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify local-install upload-secrets-to-gh upload-secrets-envfile-to-1pass deploy deploy-secrets deploy-only deploy-ip deploy-cert deploy-psql-console deploy-backup deploy-restore get-cosign-pub-key docker-login pre-commit-install pre-commit-run pre-commit pre-reqs update-golang-version docs clean help
+.PHONY: all vet test build verify run up down local local-vet local-vendor local-test local-cover local-run local-release-test local-release local-sign local-verify local-release-verify local-install upload-secrets-to-gh upload-secrets-envfile-to-1pass deploy deploy-secrets deploy-only deploy-ip deploy-cert deploy-psql-console deploy-backup deploy-restore docker-login pre-commit-install pre-commit-run pre-commit pre-reqs update-golang-version docs clean help
 
 all: vet pre-commit clean test build verify run ## Run default workflow via Docker
 local: local-update-deps local-vendor local-vet pre-commit clean local-test local-cover local-build local-sign local-verify local-run ## Run default workflow using locally installed Golang toolchain
@@ -58,11 +58,11 @@ test: ## Run `go test` in Docker
 build: ## Build Docker image, including running tests
 	docker build -f $(CURDIR)/Dockerfile.distroless -t $(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG) .
 
-get-cosign-pub-key: ## Get dinnerclub Cosign public key from GitHub
-	test -f $(CURDIR)/dinnerclub.pub || curl --silent https://raw.githubusercontent.com/toozej/dinnerclub/main/dinnerclub.pub -O
-
-verify: get-cosign-pub-key ## Verify Docker image with Cosign
-	cosign verify --key $(CURDIR)/dinnerclub.pub $(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG)
+verify: ## Verify Docker image with Cosign
+	cosign verify \
+		--certificate-identity-regexp '^https://github.com/toozej/dinnerclub/\.github/workflows/(release|weekly-docker-refresh)\.yaml@refs/(tags/.*|heads/main)$$' \
+		--certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+		$(IMAGE_AUTHOR)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 run: ## Run built Docker image
 	-docker kill $(IMAGE_NAME)
@@ -118,24 +118,25 @@ local-release-test: ## Build assets and test goreleaser config using locally ins
 	goreleaser build --clean --snapshot
 
 local-release: local-test docker-login ## Release assets using locally installed golang toolchain and goreleaser
-	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/cicd.env; then \
+	if test -e $(CURDIR)/cicd.env; then \
 		export `cat $(CURDIR)/cicd.env | xargs` && git push origin `git describe --tags` && goreleaser release --clean; \
 	else \
-		echo "Missing required cosign private key or environment variables. Cannot release."; \
+		echo "Missing required environment variables. Cannot release."; \
 	fi
 
 local-sign: local-test ## Sign locally installed golang toolchain and cosign
-	if test -e $(CURDIR)/dinnerclub.key && test -e $(CURDIR)/cicd.env; then \
-		export `cat $(CURDIR)/cicd.env | xargs` && cosign sign-blob --key=$(CURDIR)/dinnerclub.key --output-signature=$(CURDIR)/dinnerclub.sig $(CURDIR)/out/dinnerclub; \
-	else \
-		echo "no cosign private key found at $(CURDIR)/dinnerclub.key. Cannot release."; \
-	fi
+	cosign sign-blob --bundle=$(CURDIR)/out/dinnerclub.bundle $(CURDIR)/out/dinnerclub --yes
 
-local-verify: get-cosign-pub-key ## Verify locally compiled binary
-	# cosign here assumes you're using Linux AMD64 binary
-	cosign verify-blob --key $(CURDIR)/dinnerclub.pub --signature $(CURDIR)/dinnerclub.sig $(CURDIR)/out/dinnerclub
+local-verify: ## Verify locally compiled binary
+	@echo "Keyless verification requires the artifact to be signed with an OIDC identity."
+	@echo "For local builds, run local-sign with an OIDC provider (e.g. GitHub Actions)."
+	@cosign verify-blob \
+		--certificate-identity-regexp '^https://github.com/toozej/dinnerclub/\.github/workflows/(release|weekly-docker-refresh)\.yaml@refs/(tags/.*|heads/main)$$' \
+		--certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+		--bundle $(CURDIR)/out/dinnerclub.bundle \
+		$(CURDIR)/out/dinnerclub || echo "Warning: Local keyless verification failed or bundle not found."
 
-local-install: local-build local-verify ## Install compiled binary to local machine
+local-install: local-build ## Install compiled binary to local machine
 	sudo cp $(CURDIR)/out/dinnerclub /usr/local/bin/dinnerclub
 	sudo chmod 0755 /usr/local/bin/dinnerclub
 
@@ -274,6 +275,7 @@ docs: ## Serve Go documentation
 clean: ## Remove any locally compiled binaries, profiles, demo output, and built Docker image
 	@echo "=== Cleaning up compiled binaries, profiles, demo output, and built Docker image ==="
 	@rm -f $(CURDIR)/out/dinnerclub
+	@rm -f $(CURDIR)/out/*.bundle
 	@rm -rf $(CURDIR)/profiles/
 	@rm -rf $(CURDIR)/dist/
 	@rm -rf $(CURDIR)/c.out

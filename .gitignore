@@ -1,6 +1,4 @@
 # Cosign
-dinnerclub.key
-cosign.key
 *.sig
 
 # local secret environment variables

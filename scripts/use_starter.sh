@@ -21,6 +21,5 @@ go mod edit -module=github.com/${GITHUB_USERNAME}/${NEW_PROJECT_NAME}
 # rename from $OLD_PROJECT_NAME to $NEW_PROJECT_NAME
 grep -rl --exclude-dir=.git/ ${OLD_PROJECT_NAME} . | xargs sed -i "" -e "s/${OLD_PROJECT_NAME}/${NEW_PROJECT_NAME}/g"
 
-
 # show diff output so user can verify their changes
 git diff
