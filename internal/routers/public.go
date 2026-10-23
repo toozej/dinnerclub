@@ -68,7 +68,7 @@ func SetupPublicRoutes(rateLimitConfig *ratelimit.Config) {
 	users := r.Group("/users")
 	users.GET("/:username/profile", profileController.GetUserProfile)
 	users.GET("/:username/entries", profileController.GetUserEntries)
-	users.GET("/:id", controllers.GetUserByID)
+	users.GET("/id/:id", controllers.GetUserByID)
 	users.GET("/username/:username", controllers.GetUserByUsername)
 
 	// API routes for profile statistics and privacy

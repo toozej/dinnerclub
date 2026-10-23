@@ -209,7 +209,6 @@ func TestProperty_ReferralStatisticsAccuracy(t *testing.T) {
 
 			// Generate random number of referrals (0-10)
 			numReferrals := mathrand.IntN(11)
-			var actualReferees []models.User
 
 			for j := 0; j < numReferrals; j++ {
 				referee := generateRandomUser()
@@ -217,8 +216,6 @@ func TestProperty_ReferralStatisticsAccuracy(t *testing.T) {
 
 				err = service.ProcessReferral(referralCode, referee.ID)
 				require.NoError(t, err)
-
-				actualReferees = append(actualReferees, referee)
 			}
 
 			// Test the property: For any user, their displayed referral count should always match
@@ -527,14 +524,11 @@ func TestReferralService_GetReferralHistory(t *testing.T) {
 	})
 
 	t.Run("returns correct referral history", func(t *testing.T) {
-		var referredUsers []models.User
-
 		// Create referred users
 		for i := 0; i < 2; i++ {
 			newUser := generateRandomUser()
 			db.Create(&newUser)
 			service.ProcessReferral(code, newUser.ID)
-			referredUsers = append(referredUsers, newUser)
 		}
 
 		history, err := service.GetReferralHistory(referrer.ID)

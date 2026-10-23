@@ -769,7 +769,7 @@ func TestProperty_SessionInvalidationOnPasswordReset(t *testing.T) {
 				"LastLoginAt should be updated to invalidate old sessions")
 
 			// Verify the timestamp is recent (within last 5 seconds)
-			timeDiff := time.Now().Sub(*updatedUser.LastLoginAt).Abs()
+			timeDiff := time.Since(*updatedUser.LastLoginAt).Abs()
 			assert.Less(t, timeDiff, 5*time.Second, "Session invalidation timestamp should be recent")
 
 			// Verify password was actually changed

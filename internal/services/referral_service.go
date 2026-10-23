@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"gorm.io/gorm"
 
@@ -27,6 +28,17 @@ func NewReferralService(db *gorm.DB, cityCode, baseURL string) *ReferralService 
 		cityCode: cityCode,
 		baseURL:  baseURL,
 	}
+}
+
+// capitalizeFirst capitalizes only the first letter of a string.
+// Unlike strings.Title (deprecated), this handles simple ASCII strings correctly.
+func capitalizeFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
 }
 
 // GenerateReferralCode generates a secure random referral code for a user
@@ -207,7 +219,7 @@ func (r *ReferralService) GenerateReferralMessage(userID uint, customMessage str
 		CustomText:   customMessage,
 		JoinURL:      fmt.Sprintf("%s/register", r.baseURL),
 		CityCode:     r.cityCode,
-		CityName:     strings.Title(r.cityCode), // Simple capitalization
+		CityName:     capitalizeFirst(r.cityCode), // Simple capitalization
 	}
 
 	// If no custom message provided, use default

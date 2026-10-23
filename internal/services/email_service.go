@@ -360,27 +360,31 @@ func (e *EmailService) ValidateEmail(email string) error {
 
 // CheckEmailDeliverability performs basic deliverability checks
 func (e *EmailService) CheckEmailDeliverability(email string) error {
-	// First validate the format
+	// Extract domain part first for blocked-domain checks
+	parts := strings.Split(email, "@")
+	if len(parts) == 2 {
+		domain := parts[1]
+
+		// Check if domain is in our blocked list before format validation
+		// so the error message is consistently "not deliverable"
+		blockedDomains := []string{
+			"example.com",
+			"test.com",
+			"localhost",
+			"invalid",
+			"fake.com",
+		}
+
+		for _, blocked := range blockedDomains {
+			if strings.EqualFold(domain, blocked) {
+				return fmt.Errorf("email domain is not deliverable: %s", domain)
+			}
+		}
+	}
+
+	// Then validate the format for well-formed addresses
 	if err := e.ValidateEmail(email); err != nil {
 		return err
-	}
-
-	parts := strings.Split(email, "@")
-	domain := parts[1]
-
-	// Check if domain is in our blocked list
-	blockedDomains := []string{
-		"example.com",
-		"test.com",
-		"localhost",
-		"invalid",
-		"fake.com",
-	}
-
-	for _, blocked := range blockedDomains {
-		if strings.EqualFold(domain, blocked) {
-			return fmt.Errorf("email domain is not deliverable: %s", domain)
-		}
 	}
 
 	// In a real implementation, you might want to:
@@ -623,7 +627,8 @@ func (e *EmailService) ProcessIncomingEmail(toAddress, fromAddress, subject, bod
 			e.LogEmailError("forwarding_failure_notification", rule.ToAddress, notifyErr)
 		}
 
-		return e.HandleEmailError("forwarding_send", rule.ToAddress, err)
+		handledErr := e.HandleEmailError("forwarding_send", rule.ToAddress, err)
+		return fmt.Errorf("failed to forward email: %w", handledErr)
 	}
 
 	return nil

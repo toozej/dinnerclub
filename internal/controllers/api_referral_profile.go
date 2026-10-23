@@ -4,10 +4,8 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"github.com/toozej/dinnerclub/internal/models"
 	"github.com/toozej/dinnerclub/internal/services"
@@ -279,45 +277,4 @@ func (ctrl *ReferralProfileAPIController) PostConfirm(c *gin.Context) {
 type ErrorResponse struct {
 	Error   string `json:"error"`
 	Success bool   `json:"success"`
-}
-
-// handleError is a helper function to handle errors consistently
-func (ctrl *ReferralProfileAPIController) handleError(c *gin.Context, statusCode int, message string) {
-	c.JSON(statusCode, ErrorResponse{
-		Error:   message,
-		Success: false,
-	})
-}
-
-// handleDatabaseError is a helper function to handle database errors
-func (ctrl *ReferralProfileAPIController) handleDatabaseError(c *gin.Context, err error, operation string) {
-	if err == gorm.ErrRecordNotFound {
-		ctrl.handleError(c, http.StatusNotFound, "Record not found")
-		return
-	}
-
-	ctrl.handleError(c, http.StatusInternalServerError, "Database error during "+operation)
-}
-
-// validateUserID is a helper function to validate and extract user ID from context
-func (ctrl *ReferralProfileAPIController) validateUserID(c *gin.Context) (uint, bool) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		ctrl.handleError(c, http.StatusUnauthorized, "User not authenticated")
-		return 0, false
-	}
-
-	userIDUint, ok := userID.(uint)
-	if !ok {
-		// Try to convert from string if it's stored as string
-		if userIDStr, isString := userID.(string); isString {
-			if userIDInt, err := strconv.ParseUint(userIDStr, 10, 32); err == nil {
-				return uint(userIDInt), true
-			}
-		}
-		ctrl.handleError(c, http.StatusInternalServerError, "Invalid user ID format")
-		return 0, false
-	}
-
-	return userIDUint, true
 }

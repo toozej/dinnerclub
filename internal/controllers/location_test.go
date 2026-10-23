@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -8,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/toozej/dinnerclub/internal/helpers"
 	"github.com/toozej/dinnerclub/internal/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -26,13 +28,47 @@ func setupLocationTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
+// setupLocationTestRouter creates a test router with the required template functions registered.
+func setupLocationTestRouter(t *testing.T) *gin.Engine {
+	t.Helper()
+	router := gin.New()
+
+	h := &helpers.TemplateHelpers{}
+	funcMap := template.FuncMap{
+		"FormatBoolean":        h.FormatBoolean,
+		"FormatRating":         h.FormatRating,
+		"GetRatingDescription": h.GetRatingDescription,
+		"GetRatingLabel":       h.GetRatingLabel,
+		"UserProfileLink":      h.UserProfileLink,
+		"TooltipText":          h.TooltipText,
+		"GetRatingOptions":     h.GetRatingOptions,
+		"SafeHTML":             h.SafeHTML,
+		"Add":                  h.Add,
+		"add":                  h.Add,
+		"StringToInt":          h.StringToInt,
+		"IsEmpty":              h.IsEmpty,
+		"FormatDate":           h.FormatDate,
+		"FormatDateTime":       h.FormatDateTime,
+		"CSRFToken":            h.CSRFToken,
+		"CSRFField":            h.CSRFField,
+		"CSRFInput":            h.CSRFInput,
+		"sub":                  h.Sub,
+		"Sub":                  h.Sub,
+		"mul":                  h.Mul,
+		"Mul":                  h.Mul,
+		"default":              h.Default,
+	}
+	router.SetFuncMap(funcMap)
+	router.LoadHTMLGlob("../../templates/**/*")
+	return router
+}
+
 func TestShowLocationSearch(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db := setupLocationTestDB(t)
 	controller := NewLocationController(db)
 
-	router := gin.New()
-	router.LoadHTMLGlob("../../templates/**/*")
+	router := setupLocationTestRouter(t)
 	router.GET("/location", controller.ShowLocationSearch)
 
 	req, _ := http.NewRequest("GET", "/location", nil)
@@ -49,8 +85,7 @@ func TestSearchNearby_InvalidLatitude(t *testing.T) {
 	db := setupLocationTestDB(t)
 	controller := NewLocationController(db)
 
-	router := gin.New()
-	router.LoadHTMLGlob("../../templates/**/*")
+	router := setupLocationTestRouter(t)
 	router.POST("/location/search", controller.SearchNearby)
 
 	form := url.Values{}
@@ -74,8 +109,7 @@ func TestSearchNearby_InvalidLongitude(t *testing.T) {
 	db := setupLocationTestDB(t)
 	controller := NewLocationController(db)
 
-	router := gin.New()
-	router.LoadHTMLGlob("../../templates/**/*")
+	router := setupLocationTestRouter(t)
 	router.POST("/location/search", controller.SearchNearby)
 
 	form := url.Values{}
@@ -99,8 +133,7 @@ func TestSearchNearby_InvalidRadius(t *testing.T) {
 	db := setupLocationTestDB(t)
 	controller := NewLocationController(db)
 
-	router := gin.New()
-	router.LoadHTMLGlob("../../templates/**/*")
+	router := setupLocationTestRouter(t)
 	router.POST("/location/search", controller.SearchNearby)
 
 	tests := []struct {
@@ -138,8 +171,7 @@ func TestSearchNearby_OutOfRangeCoordinates(t *testing.T) {
 	db := setupLocationTestDB(t)
 	controller := NewLocationController(db)
 
-	router := gin.New()
-	router.LoadHTMLGlob("../../templates/**/*")
+	router := setupLocationTestRouter(t)
 	router.POST("/location/search", controller.SearchNearby)
 
 	tests := []struct {
@@ -178,8 +210,7 @@ func TestSearchNearby_ValidRequest(t *testing.T) {
 	db := setupLocationTestDB(t)
 	controller := NewLocationController(db)
 
-	router := gin.New()
-	router.LoadHTMLGlob("../../templates/**/*")
+	router := setupLocationTestRouter(t)
 	router.POST("/location/search", controller.SearchNearby)
 
 	form := url.Values{}

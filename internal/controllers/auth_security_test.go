@@ -188,7 +188,7 @@ func TestPostManageBackupCodes(t *testing.T) {
 	})
 
 	t.Run("status action returns backup code count", func(t *testing.T) {
-		router, db := setupAuthSecurityTestRouter(t, 1)
+		_, db := setupAuthSecurityTestRouter(t, 1)
 		user := models.User{
 			Username:         "bkup_user",
 			Password:         "password123456",
@@ -200,7 +200,7 @@ func TestPostManageBackupCodes(t *testing.T) {
 		}
 		require.NoError(t, db.Create(&user).Error)
 
-		router, _ = setupAuthSecurityTestRouter(t, user.ID)
+		router, _ := setupAuthSecurityTestRouter(t, user.ID)
 
 		body := map[string]string{"action": "status"}
 		jsonBody, _ := json.Marshal(body)
@@ -217,7 +217,7 @@ func TestPostManageBackupCodes(t *testing.T) {
 	})
 
 	t.Run("regenerate action requires password", func(t *testing.T) {
-		router, db := setupAuthSecurityTestRouter(t, 1)
+		_, db := setupAuthSecurityTestRouter(t, 1)
 		user := models.User{
 			Username:         "regen_user",
 			Password:         "password123456",
@@ -229,7 +229,7 @@ func TestPostManageBackupCodes(t *testing.T) {
 		}
 		require.NoError(t, db.Create(&user).Error)
 
-		router, _ = setupAuthSecurityTestRouter(t, user.ID)
+		router, _ := setupAuthSecurityTestRouter(t, user.ID)
 
 		body := map[string]string{"action": "regenerate"}
 		jsonBody, _ := json.Marshal(body)

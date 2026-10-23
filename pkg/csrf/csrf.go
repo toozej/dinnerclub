@@ -13,10 +13,9 @@ import (
 // Middleware creates a CSRF protection middleware for Gin using filippo.io/csrf/gorilla.
 func Middleware(csrfSecret string, secure bool) gin.HandlerFunc {
 	// Create CSRF protection with options
+	// Note: Secure, HttpOnly, and SameSite options are deprecated in filippo.io/csrf/gorilla
+	// as the library no longer relies on cookies for its CSRF protection mechanism.
 	csrfOptions := []csrf.Option{
-		csrf.Secure(secure), // Set to true in production with HTTPS
-		csrf.HttpOnly(true),
-		csrf.SameSite(csrf.SameSiteStrictMode),
 		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.Warnf("CSRF token validation failed for %s %s", r.Method, r.URL.Path)
 			// Don't write response here - let the application handle it
@@ -42,8 +41,10 @@ func Middleware(csrfSecret string, secure bool) gin.HandlerFunc {
 }
 
 // Token returns the CSRF token for the current request context.
+// Note: The filippo.io/csrf/gorilla library no longer relies on tokens,
+// so this returns an empty string. CSRF protection is handled by the middleware.
 func Token(c *gin.Context) string {
-	return csrf.Token(c.Request)
+	return ""
 }
 
 // Field returns the CSRF form field name used by filippo.io/csrf/gorilla.

@@ -137,7 +137,7 @@ func (f *FounderService) sendFounderNotification(user models.User) error {
 		UserID:  user.ID,
 		ActorID: user.ID, // System notification, actor is the user themselves
 		Type:    "founder_status",
-		Message: fmt.Sprintf("Congratulations! You've been granted founder status. Welcome to the founding members of dinner.club!"),
+		Message: "Congratulations! You've been granted founder status. Welcome to the founding members of dinner.club!",
 		Read:    false,
 	}
 

@@ -43,11 +43,7 @@ func TestProperty40_DistanceCalculationAccuracy(t *testing.T) {
 
 			// Property 4: Distance should be reasonable (not exceed Earth's circumference)
 			earthCircumference := 40075.0 // km
-			if distance > earthCircumference {
-				return false
-			}
-
-			return true
+			return distance <= earthCircumference
 		},
 		gen.Float64Range(-90, 90),   // lat1
 		gen.Float64Range(-180, 180), // lon1

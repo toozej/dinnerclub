@@ -587,7 +587,7 @@ func TestProfileDisplayService_PrivacyFunctionality(t *testing.T) {
 		}
 
 		// Test with login but no follow relationships
-		users, total, err = service.GetVisibleUsers(viewer.ID, 10, 0)
+		_, total, err = service.GetVisibleUsers(viewer.ID, 10, 0)
 		require.NoError(t, err)
 		assert.Equal(t, int64(3), total) // publicUser + original user + viewer themselves
 
@@ -599,7 +599,7 @@ func TestProfileDisplayService_PrivacyFunctionality(t *testing.T) {
 		db.Create(&follow)
 
 		// Test with follow relationship
-		users, total, err = service.GetVisibleUsers(viewer.ID, 10, 0)
+		_, total, err = service.GetVisibleUsers(viewer.ID, 10, 0)
 		require.NoError(t, err)
 		assert.Equal(t, int64(4), total) // publicUser + original user + viewer + followersOnlyUser
 	})

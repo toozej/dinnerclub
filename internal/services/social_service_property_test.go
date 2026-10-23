@@ -192,11 +192,9 @@ func TestProperty_SocialCountAccuracy(t *testing.T) {
 
 			// Create random number of followers (1-10)
 			numFollowers := mathrand.IntN(10) + 1
-			var followers []models.User
 			for j := 0; j < numFollowers; j++ {
 				follower := generateRandomSocialUser()
 				require.NoError(t, db.Create(&follower).Error)
-				followers = append(followers, follower)
 
 				// Follow the target user
 				err := service.FollowUser(follower.ID, targetUser.ID)
@@ -205,11 +203,9 @@ func TestProperty_SocialCountAccuracy(t *testing.T) {
 
 			// Create random number of users that target user follows (1-10)
 			numFollowing := mathrand.IntN(10) + 1
-			var following []models.User
 			for j := 0; j < numFollowing; j++ {
 				followedUser := generateRandomSocialUser()
 				require.NoError(t, db.Create(&followedUser).Error)
-				following = append(following, followedUser)
 
 				// Target user follows this user
 				err := service.FollowUser(targetUser.ID, followedUser.ID)

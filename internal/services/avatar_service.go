@@ -2,7 +2,7 @@
 package services
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 -- Gravatar API requires MD5; not used for security-critical hashing
 	"encoding/hex"
 	"fmt"
 	"image"
@@ -44,6 +44,7 @@ func (a *AvatarService) GetGravatarURL(email string, size int) string {
 	normalizedEmail := strings.TrimSpace(strings.ToLower(email))
 
 	// Generate MD5 hash of the email
+	// #nosec G401,G501 -- Gravatar API requires MD5 hashing; this is not used for security
 	hash := md5.Sum([]byte(normalizedEmail))
 	hashString := hex.EncodeToString(hash[:])
 
@@ -85,11 +86,12 @@ func (a *AvatarService) UploadCustomAvatar(userID uint, file multipart.File, hea
 	filepath := filepath.Join(a.uploadPath, filename)
 
 	// Ensure upload directory exists
-	if err := os.MkdirAll(a.uploadPath, 0755); err != nil {
+	if err := os.MkdirAll(a.uploadPath, 0750); err != nil {
 		return "", fmt.Errorf("failed to create upload directory: %w", err)
 	}
 
 	// Save resized image
+	// #nosec G304 -- filepath is constructed from a.uploadPath (controlled) and userID-based filename; not user input
 	outFile, err := os.Create(filepath)
 	if err != nil {
 		return "", fmt.Errorf("failed to create output file: %w", err)

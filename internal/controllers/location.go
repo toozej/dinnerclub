@@ -30,44 +30,6 @@ type LocationError struct {
 	ErrorCode   string   `json:"error_code"`
 }
 
-// getLocationErrorSuggestions provides user-friendly suggestions based on error type
-func (lc *LocationController) getLocationErrorSuggestions(errorType string) []string {
-	switch errorType {
-	case "INVALID_COORDINATES":
-		return []string{
-			"Check that latitude is between -90 and 90",
-			"Check that longitude is between -180 and 180",
-			"Use decimal degrees format (e.g., 40.7128, -74.0060)",
-			"Try using the 'Use My Current Location' button instead",
-		}
-	case "INVALID_RADIUS":
-		return []string{
-			"Enter a radius between 1 and 100 kilometers",
-			"Try starting with 10km and expand if needed",
-			"Consider that larger radius may return many results",
-		}
-	case "NO_RESULTS":
-		return []string{
-			"Try expanding your search radius",
-			"Check if your location is correct",
-			"Try a different search type (nearby, wishlist, unvisited)",
-			"Search in a nearby city or popular area",
-		}
-	case "AUTH_REQUIRED":
-		return []string{
-			"Log in to search your personal wishlist",
-			"Log in to find restaurants you haven't visited",
-			"Use 'All Nearby Restaurants' for public search",
-		}
-	default:
-		return []string{
-			"Try refreshing the page",
-			"Check your internet connection",
-			"Try entering your location manually",
-		}
-	}
-}
-
 // ShowLocationSearch displays the location search page
 func (lc *LocationController) ShowLocationSearch(c *gin.Context) {
 	c.HTML(http.StatusOK, "search/location.html", gin.H{

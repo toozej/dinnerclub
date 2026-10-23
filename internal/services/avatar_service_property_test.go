@@ -758,11 +758,7 @@ func TestProperty_AvatarDisplayHTMLWellFormed(t *testing.T) {
 
 			// Should contain size attributes
 			sizeStr := fmt.Sprintf("width=\"%d\"", size)
-			if !strings.Contains(html, sizeStr) {
-				return false
-			}
-
-			return true
+			return strings.Contains(html, sizeStr)
 		},
 		gen.Identifier(),
 		gen.Identifier(),
